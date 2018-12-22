@@ -1,0 +1,4 @@
+useDynLib(rtomahawk, .registration=TRUE)
+exportPattern("^[[:alpha:]]+")
+#exportPattern("^[^\\.]")
+importFrom(Rcpp, evalCpp)
