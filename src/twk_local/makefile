@@ -67,13 +67,9 @@ INCLUDE_PATH := $(sort $(INCLUDE_PATH))
 # Library paths
 LIBRARY_PATHS := $(ZSTD_LIBRARY_PATH) $(HSLIB_LIBRARY_PATH) -L/usr/local/lib/
 
-OPTFLAGS := -O3 -msse4.2
+OPTFLAGS := -O3 -msse4.2 -fpic
 # Legacy flags used
 #OPTFLAGS := -O3 -march=native -mtune=native -ftree-vectorize -pipe -frename-registers -funroll-loops
-
-ifdef library
-OPTFLAGS += -fPIC
-endif
 
 # OS X linker doesn't support -soname, and use different extension
 # see : https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/DynamicLibraries/100-Articles/DynamicLibraryDesignGuidelines.html
@@ -115,11 +111,6 @@ all: tomahawk
 	g++ $(CXXFLAGS) $(INCLUDE_PATH) -c -DVERSION=\"$(GIT_VERSION)\" -o $@ $<
 
 tomahawk: $(OBJECTS)
-	g++ $(BINARY_RPATHS) $(LIBRARY_PATHS) -pthread $(OBJECTS) $(LIBS) -o twk
-	$(MAKE) cleanmost
-	$(MAKE) library library=true
-
-library: $(OBJECTS)
 	@echo 'Building dynamic library...'
 	g++ $(LD_LIB_FLAGS) $(LIBRARY_PATHS) -pthread $(OBJECTS) $(LIBS) -o libtomahawk.$(SHARED_EXT).$(LIBVER)
 	@echo 'Building static library...'
