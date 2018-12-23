@@ -1,0 +1,6 @@
+[submodule "src/zstd"]
+	path = src/zstd
+	url = https://github.com/facebook/zstd
+[submodule "src/htslib"]
+	path = src/htslib
+	url = https://github.com/samtools/htslib
