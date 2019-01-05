@@ -97,6 +97,21 @@ setMethod("tail",
         inargs <- list(...)
         args1[names(inargs)] <- inargs
         if(args1$n <= 0) return(NULL)
-        return(twk_tail(x));
+        return(twk_tail(x, args1$n));
+    }
+)
+
+if (!isGeneric("decay")) {
+    setGeneric("decay", function(x="twk", range = "numeric", nbins = "numeric", ...){ standardGeneric("decay") })
+}
+
+setMethod("decay",
+    signature(x="twk"),
+    definition = function(x, range = 1000000, nbins = 1000, ...){
+        args1 <- list(x = x, range = range, nbins = nbins)
+        inargs <- list(...)
+        args1[names(inargs)] <- inargs
+        if(args1$nbins <= 0) return(NULL)
+        return(twk_decay(x, args1$range, args1$nbins));
     }
 )

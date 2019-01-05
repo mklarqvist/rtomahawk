@@ -28,13 +28,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // twk_tail
-Rcpp::DataFrame twk_tail(Rcpp::S4& obj);
-RcppExport SEXP _rtomahawk_twk_tail(SEXP objSEXP) {
+Rcpp::DataFrame twk_tail(Rcpp::S4& obj, uint32_t n_records);
+RcppExport SEXP _rtomahawk_twk_tail(SEXP objSEXP, SEXP n_recordsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4& >::type obj(objSEXP);
-    rcpp_result_gen = Rcpp::wrap(twk_tail(obj));
+    Rcpp::traits::input_parameter< uint32_t >::type n_records(n_recordsSEXP);
+    rcpp_result_gen = Rcpp::wrap(twk_tail(obj, n_records));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -49,12 +50,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// twk_decay
+Rcpp::DataFrame twk_decay(Rcpp::S4& obj, uint32_t range, uint32_t n_bins);
+RcppExport SEXP _rtomahawk_twk_decay(SEXP objSEXP, SEXP rangeSEXP, SEXP n_binsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type obj(objSEXP);
+    Rcpp::traits::input_parameter< uint32_t >::type range(rangeSEXP);
+    Rcpp::traits::input_parameter< uint32_t >::type n_bins(n_binsSEXP);
+    rcpp_result_gen = Rcpp::wrap(twk_decay(obj, range, n_bins));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rtomahawk_twk_version", (DL_FUNC) &_rtomahawk_twk_version, 0},
     {"_rtomahawk_twk_head", (DL_FUNC) &_rtomahawk_twk_head, 2},
-    {"_rtomahawk_twk_tail", (DL_FUNC) &_rtomahawk_twk_tail, 1},
+    {"_rtomahawk_twk_tail", (DL_FUNC) &_rtomahawk_twk_tail, 2},
     {"_rtomahawk_LoadHeader", (DL_FUNC) &_rtomahawk_LoadHeader, 1},
+    {"_rtomahawk_twk_decay", (DL_FUNC) &_rtomahawk_twk_decay, 3},
     {NULL, NULL, 0}
 };
 

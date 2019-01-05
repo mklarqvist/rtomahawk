@@ -8,13 +8,71 @@ using namespace Rcpp;
 #include "utility.h"
 #include "two_reader.h"
 
-List rcpp_hello_world() {
-    CharacterVector x = CharacterVector::create( "foo", "bar" )  ;
-    NumericVector y   = NumericVector::create( 0.0, 1.0 ) ;
-    List z            = List::create( x, y ) ;
+/**
+ * @brief Supportive structure for transposing internal tomahawk::twk1_two_t 
+ *        records stored in a record-centric fashion into field-centric (column) 
+ *        stores as required by R data.frame structures.
+ * 
+ */
+struct twk_two_transpose_t {
+    twk_two_transpose_t(uint32_t n){
+        for(int i = 0; i < 3;  ++i) cols[i].reserve(n);
+        for(int i = 0; i < 2;  ++i) scols[i].reserve(n);
+        for(int i = 0; i < 11; ++i) dcols[i].reserve(n);
+    }
+  
+    /**
+     * @brief Overload operator for adding individual twk1_two_t records to
+     *        each individual column store.
+     * 
+     * @param rec     Reference input twk1_two_t record.
+     * @param oreader Reference twk_reader used for extracting contig names from the header.
+     */
+    void Add(const tomahawk::twk1_two_t& rec, const tomahawk::two_reader& oreader){
+        // Integer
+        cols[0].push_back(rec.controller);
+        cols[1].push_back(rec.Apos);
+        cols[2].push_back(rec.Bpos);
+        // String
+        scols[0].push_back(oreader.hdr.contigs_[rec.ridA].name);
+        scols[1].push_back(oreader.hdr.contigs_[rec.ridB].name);
+        // Double
+        dcols[0].push_back(rec.cnt[0]);
+        dcols[1].push_back(rec.cnt[1]);
+        dcols[2].push_back(rec.cnt[2]);
+        dcols[3].push_back(rec.cnt[3]);
+        dcols[4].push_back(rec.D);
+        dcols[5].push_back(rec.Dprime);
+        dcols[6].push_back(rec.R);
+        dcols[7].push_back(rec.R2);
+        dcols[8].push_back(rec.P);
+        dcols[9].push_back(rec.ChiSqFisher);
+        dcols[10].push_back(rec.ChiSqModel);
+    }
 
-    return z ;
-}
+    Rcpp::DataFrame GetDataFrame() const {
+        return(Rcpp::DataFrame::create(Rcpp::Named("FLAG")=cols[0],
+                                    Rcpp::Named("ridA")=scols[0],
+                                    Rcpp::Named("posA")=cols[1],
+                                    Rcpp::Named("ridB")=scols[1],
+                                    Rcpp::Named("posB")=cols[2],
+                                    Rcpp::Named("REFREF")=dcols[0],
+                                    Rcpp::Named("REFALT")=dcols[1],
+                                    Rcpp::Named("ALTREF")=dcols[2],
+                                    Rcpp::Named("ALTALT")=dcols[3],
+                                    Rcpp::Named("D")=dcols[4],
+                                    Rcpp::Named("Dprime")=dcols[5],
+                                    Rcpp::Named("R")=dcols[6],
+                                    Rcpp::Named("R2")=dcols[7],
+                                    Rcpp::Named("P")=dcols[8],
+                                    Rcpp::Named("ChiSqFisher")=dcols[9],
+                                    Rcpp::Named("ChiSqModel")=dcols[10]));
+    }
+
+    std::vector<uint32_t>    cols[3];
+    std::vector<std::string> scols[2];
+    std::vector<double>      dcols[11];
+};
 
 // [[Rcpp::export]]
 std::string twk_version(){
@@ -26,10 +84,8 @@ Rcpp::DataFrame twk_head(Rcpp::S4& obj, uint32_t n_records){
     if (! obj.inherits("twk"))
         stop("Input must be a twk() model object.");
 
-    if(n_records == 0){
-         Rcpp::Rcout << tomahawk::utility::timestamp("ERROR") << "Cannot head 0 records!" << std::endl;
-        return Rcpp::DataFrame::create();
-    }
+    if(n_records == 0)
+        stop("Cannot head 0 records!");
 
     // New instance of reader.
     tomahawk::two_reader oreader;
@@ -48,58 +104,19 @@ Rcpp::DataFrame twk_head(Rcpp::S4& obj, uint32_t n_records){
     }
     n_records = std::min(n_avail, n_records);
 
-    std::vector<uint32_t>    cols[3];
-    std::vector<std::string> scols[2];
-    std::vector<double>      dcols[11];
-    for(int i = 0; i < 3;  ++i) cols[i].resize(n_records);
-    for(int i = 0; i < 2;  ++i) scols[i].resize(n_records);
-    for(int i = 0; i < 11; ++i) dcols[i].resize(n_records);
+    twk_two_transpose_t recs(n_records);
 
     int i = 0;
     while(oreader.NextRecord()){
-        // Integer
-        cols[0][i]  = oreader.it.rcd->controller;
-        cols[1][i]  = oreader.it.rcd->Apos;
-        cols[2][i]  = oreader.it.rcd->Bpos;
-        // String
-        scols[0][i] = oreader.hdr.contigs_[oreader.it.rcd->ridA].name;
-        scols[1][i] = oreader.hdr.contigs_[oreader.it.rcd->ridB].name;
-        // Double
-        dcols[0][i]  = oreader.it.rcd->cnt[0];
-        dcols[1][i]  = oreader.it.rcd->cnt[1];
-        dcols[2][i]  = oreader.it.rcd->cnt[2];
-        dcols[3][i]  = oreader.it.rcd->cnt[3];
-        dcols[4][i]  = oreader.it.rcd->D;
-        dcols[5][i]  = oreader.it.rcd->Dprime;
-        dcols[6][i]  = oreader.it.rcd->R;
-        dcols[7][i]  = oreader.it.rcd->R2;
-        dcols[8][i]  = oreader.it.rcd->P;
-        dcols[9][i]  = oreader.it.rcd->ChiSqFisher;
-        dcols[10][i] = oreader.it.rcd->ChiSqModel;
-
+        recs.Add(*oreader.it.rcd, oreader);
         if(++i == n_records) break;
     }
 
-    return(Rcpp::DataFrame::create(Rcpp::Named("FLAG")=cols[0],
-                                    Rcpp::Named("ridA")=scols[0],
-                                    Rcpp::Named("posA")=cols[1],
-                                    Rcpp::Named("ridB")=scols[1],
-                                    Rcpp::Named("posB")=cols[2],
-                                    Rcpp::Named("REFREF")=dcols[0],
-                                    Rcpp::Named("REFALT")=dcols[1],
-                                    Rcpp::Named("ALTREF")=dcols[2],
-                                    Rcpp::Named("ALTALT")=dcols[3],
-                                    Rcpp::Named("D")=dcols[4],
-                                    Rcpp::Named("Dprime")=dcols[5],
-                                    Rcpp::Named("R")=dcols[6],
-                                    Rcpp::Named("R2")=dcols[7],
-                                    Rcpp::Named("P")=dcols[8],
-                                    Rcpp::Named("ChiSqFisher")=dcols[9],
-                                    Rcpp::Named("ChiSqModel")=dcols[10]));
+    return(recs.GetDataFrame());
 }
 
 // [[Rcpp::export]]
-Rcpp::DataFrame twk_tail(Rcpp::S4& obj){
+Rcpp::DataFrame twk_tail(Rcpp::S4& obj, uint32_t n_records){
     if (! obj.inherits("twk"))
         stop("Input must be a twk() model object.");
 
@@ -112,59 +129,38 @@ Rcpp::DataFrame twk_tail(Rcpp::S4& obj){
         return Rcpp::DataFrame::create();
     }
 
-    oreader.stream->seekg(oreader.index.ent[oreader.index.n - 1].foff);
+    uint32_t n_avail = 0;
+    uint32_t n_block = (oreader.index.n - 1), n_offset = 0, n_blocks = 1;
+    for(int i = (oreader.index.n - 1); i != 0; --i){
+        n_avail += oreader.index.ent[i].n;
+        if(n_avail >= n_records) break;
+        --n_block; ++n_blocks;
+    }
+    if(n_records > n_avail) n_records = n_avail;
+
+    oreader.stream->seekg(oreader.index.ent[n_block].foff);
+    oreader.it.NextBlock();
+    if(n_blocks == 1 && oreader.index.ent[n_block].n >= n_records){
+        oreader.it.offset = oreader.index.ent[n_block].n - n_records;
+    } else {
+        int32_t diff = n_avail - n_records;
+        oreader.it.offset = diff;
+    }
+
     if(oreader.stream->good() == false){
         Rcpp::Rcout << tomahawk::utility::timestamp("ERROR") << "Failed to seek in file: \"" << Rcpp::as<std::string>(obj.slot("file.path")) << "\"!" << std::endl;
         return Rcpp::DataFrame::create();
     }
     
-    std::vector<uint32_t>    cols[3];
-    std::vector<std::string> scols[2];
-    std::vector<double>      dcols[11];
-    for(int i = 0; i < 3;  ++i) cols[i].resize(oreader.index.ent[oreader.index.n - 1].n);
-    for(int i = 0; i < 2;  ++i) scols[i].resize(oreader.index.ent[oreader.index.n - 1].n);
-    for(int i = 0; i < 11; ++i) dcols[i].resize(oreader.index.ent[oreader.index.n - 1].n);
+    twk_two_transpose_t recs(n_records);
 
     int i = 0;
     while(oreader.NextRecord()){
-        // Integer
-        cols[0][i]  = oreader.it.rcd->controller;
-        cols[1][i]  = oreader.it.rcd->Apos;
-        cols[2][i]  = oreader.it.rcd->Bpos;
-        // String
-        scols[0][i] = oreader.hdr.contigs_[oreader.it.rcd->ridA].name;
-        scols[1][i] = oreader.hdr.contigs_[oreader.it.rcd->ridB].name;
-        // Double
-        dcols[0][i]  = oreader.it.rcd->cnt[0];
-        dcols[1][i]  = oreader.it.rcd->cnt[1];
-        dcols[2][i]  = oreader.it.rcd->cnt[2];
-        dcols[3][i]  = oreader.it.rcd->cnt[3];
-        dcols[4][i]  = oreader.it.rcd->D;
-        dcols[5][i]  = oreader.it.rcd->Dprime;
-        dcols[6][i]  = oreader.it.rcd->R;
-        dcols[7][i]  = oreader.it.rcd->R2;
-        dcols[8][i]  = oreader.it.rcd->P;
-        dcols[9][i]  = oreader.it.rcd->ChiSqFisher;
-        dcols[10][i] = oreader.it.rcd->ChiSqModel;
-        ++i;
+        recs.Add(*oreader.it.rcd, oreader);
+        if(++i == n_records) break;
     }
 
-    return(Rcpp::DataFrame::create(Rcpp::Named("FLAG")=cols[0],
-                                    Rcpp::Named("ridA")=scols[0],
-                                    Rcpp::Named("posA")=cols[1],
-                                    Rcpp::Named("ridB")=scols[1],
-                                    Rcpp::Named("posB")=cols[2],
-                                    Rcpp::Named("REFREF")=dcols[0],
-                                    Rcpp::Named("REFALT")=dcols[1],
-                                    Rcpp::Named("ALTREF")=dcols[2],
-                                    Rcpp::Named("ALTALT")=dcols[3],
-                                    Rcpp::Named("D")=dcols[4],
-                                    Rcpp::Named("Dprime")=dcols[5],
-                                    Rcpp::Named("R")=dcols[6],
-                                    Rcpp::Named("R2")=dcols[7],
-                                    Rcpp::Named("P")=dcols[8],
-                                    Rcpp::Named("ChiSqFisher")=dcols[9],
-                                    Rcpp::Named("ChiSqModel")=dcols[10]));
+    return(recs.GetDataFrame());
 }
 
 bool LoadContigs(const tomahawk::two_reader& oreader, Rcpp::S4& obj){
@@ -256,7 +252,6 @@ Rcpp::S4 LoadHeader(std::string input){
     Function f("path.expand");
     std::string inreal = Rcpp::as<std::string>(f(input));
 
-    // Test
     Rcpp::Language twk_type("new", "twk");
     Rcpp::S4 twk( twk_type.eval() ); //use Rcpp::Language to create and assign a twk_header S4 object.
 
@@ -291,4 +286,53 @@ Rcpp::S4 LoadHeader(std::string input){
 
     // Start constructing the sample component.
     return(twk);
+}
+
+// [[Rcpp::export]]
+Rcpp::DataFrame twk_decay(Rcpp::S4& obj, uint32_t range, uint32_t n_bins){
+    if (! obj.inherits("twk"))
+        stop("Input must be a twk() model object.");
+
+    // New instance of reader.
+    tomahawk::two_reader oreader;
+
+    // Open file handle.
+    if(oreader.Open(Rcpp::as<std::string>(obj.slot("file.path"))) == false){
+        Rcpp::Rcout << tomahawk::utility::timestamp("ERROR") << "Failed to open: \"" << Rcpp::as<std::string>(obj.slot("file.path")) << "\"!" << std::endl;
+        return Rcpp::DataFrame::create();
+    }
+
+    //uint64_t n_range = 10e6;
+	//uint32_t n_bins  = 1000;
+	uint32_t n_range_bin = range/n_bins;
+	std::vector<std::pair<double,uint64_t>> decay(n_bins+1,{0,0});
+
+	while(oreader.NextRecord()){
+		// Same contig only.
+		if(oreader.it.rcd->ridA == oreader.it.rcd->ridB){
+			// Upper trig only.
+			if(oreader.it.rcd->Apos < oreader.it.rcd->Bpos){
+				decay[std::min((oreader.it.rcd->Bpos - oreader.it.rcd->Apos) / n_range_bin, n_bins)].first += oreader.it.rcd->R2;
+				++decay[std::min((oreader.it.rcd->Bpos - oreader.it.rcd->Apos) / n_range_bin, n_bins)].second;
+			}
+		}
+	}
+
+    std::vector<uint32_t> from, to;
+    std::vector<double> mean_out;
+    std::vector<uint64_t> freq;
+
+	//std::cout << "From\tTo\tMean\tFrequency\n";
+	for(int i = 0; i < decay.size(); ++i){
+        from.push_back((i*n_range_bin)); 
+        to.push_back(((i+1)*n_range_bin));
+        mean_out.push_back(decay[i].first/std::max(decay[i].second,(uint64_t)1));
+        freq.push_back(decay[i].second);
+		//std::cout << (i*n_range_bin) << '\t' << ((i+1)*n_range_bin) << '\t' << decay[i].first/std::max(decay[i].second,(uint64_t)1) << '\t' << decay[i].second << '\n';
+	}
+	//std::cout.flush();
+    return(Rcpp::DataFrame::create(Rcpp::Named("from")=from,
+                                Rcpp::Named("to")=to,
+                                Rcpp::Named("mean")=mean_out,
+                                Rcpp::Named("freq")=freq));
 }

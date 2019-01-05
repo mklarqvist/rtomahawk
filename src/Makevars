@@ -48,13 +48,9 @@ CPP_DEPS = $(CXX_SOURCE:.cpp=.d) $(C_SOURCE:.c=.d)
 .PHONY: all zstd htslib twk clean
 
 all: clean zstd htslib twk $(OBJECTS)
-	#g++ $(LIBRARY_PATHS) $(OBJECTS) -pthread -lzstd -o testpkg
 	cp twk_local/libtomahawk.so.0.7.0 libtomahawk.so
 	cp htslib/libhts.so .
 	cp zstd/lib/libzstd.so.1.3.8 libzstd.so
-	#cp twk_local/curl-7.61.0/lib/.libs/libcurl.so.4.5.0 libcurl.so
-	#cp twk_local/openssl/libcrypto.so.3 libcrypto.so
-	#cp twk_local/openssl/libssl.so.3 libssl.so
 	mkdir -p "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
 	mkdir -p "${R_PACKAGE_DIR}/include/htslib"
 	mkdir -p "${R_PACKAGE_DIR}/include/zstd"

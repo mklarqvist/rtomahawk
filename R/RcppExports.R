@@ -9,11 +9,15 @@ twk_head <- function(obj, n_records) {
     .Call(`_rtomahawk_twk_head`, obj, n_records)
 }
 
-twk_tail <- function(obj) {
-    .Call(`_rtomahawk_twk_tail`, obj)
+twk_tail <- function(obj, n_records) {
+    .Call(`_rtomahawk_twk_tail`, obj, n_records)
 }
 
 LoadHeader <- function(input) {
     .Call(`_rtomahawk_LoadHeader`, input)
+}
+
+twk_decay <- function(obj, range, n_bins) {
+    .Call(`_rtomahawk_twk_decay`, obj, range, n_bins)
 }
 
