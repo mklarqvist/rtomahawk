@@ -4,3 +4,6 @@
 [submodule "src/htslib"]
 	path = src/htslib
 	url = https://github.com/samtools/htslib
+[submodule "src/tomahawk"]
+	path = src/tomahawk
+	url = https://github.com/mklarqvist/twk_local

@@ -2,7 +2,6 @@
 #include <sstream>
 
 #include <Rcpp.h>
-using namespace Rcpp;
 
 #include "tomahawk.h"
 #include "utility.h"
@@ -82,10 +81,10 @@ std::string twk_version(){
 // [[Rcpp::export]]
 Rcpp::DataFrame twk_head(Rcpp::S4& obj, uint32_t n_records){
     if (! obj.inherits("twk"))
-        stop("Input must be a twk() model object.");
+        Rcpp::stop("Input must be a twk() model object.");
 
     if(n_records == 0)
-        stop("Cannot head 0 records!");
+        Rcpp::stop("Cannot head 0 records!");
 
     // New instance of reader.
     tomahawk::two_reader oreader;
@@ -118,7 +117,7 @@ Rcpp::DataFrame twk_head(Rcpp::S4& obj, uint32_t n_records){
 // [[Rcpp::export]]
 Rcpp::DataFrame twk_tail(Rcpp::S4& obj, uint32_t n_records){
     if (! obj.inherits("twk"))
-        stop("Input must be a twk() model object.");
+        Rcpp::stop("Input must be a twk() model object.");
 
     // New instance of reader.
     tomahawk::two_reader oreader;
@@ -249,7 +248,7 @@ bool LoadHeaderLiterals(const tomahawk::two_reader& oreader, Rcpp::S4& obj){
 Rcpp::S4 LoadHeader(std::string input){
     // Make use of R internal function path.expand() to expand out
     // a relative path into an absolute path as required by the API.
-    Function f("path.expand");
+    Rcpp::Function f("path.expand");
     std::string inreal = Rcpp::as<std::string>(f(input));
 
     Rcpp::Language twk_type("new", "twk");
@@ -291,7 +290,7 @@ Rcpp::S4 LoadHeader(std::string input){
 // [[Rcpp::export]]
 Rcpp::DataFrame twk_decay(Rcpp::S4& obj, uint32_t range, uint32_t n_bins){
     if (! obj.inherits("twk"))
-        stop("Input must be a twk() model object.");
+        Rcpp::stop("Input must be a twk() model object.");
 
     // New instance of reader.
     tomahawk::two_reader oreader;

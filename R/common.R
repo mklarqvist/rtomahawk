@@ -101,6 +101,26 @@ setMethod("tail",
     }
 )
 
+setMethod("[",
+    signature(x="twk"),
+    definition = function(x, i = NULL, j = NULL, ..., drop = FALSE){
+        #args1 <- list(x = x, i = i, j = j, drop = drop)
+        #inargs <- list(...)
+        #args1[names(inargs)] <- inargs
+        return(i)
+    }
+)
+
+setMethod("[<-",
+    signature(x="twk"),
+    definition = function(x, i = NULL, j = NULL, ..., value){
+        #args1 <- list(x = x, i = i, j = j, drop = drop)
+        #inargs <- list(...)
+        #args1[names(inargs)] <- inargs
+        return(TRUE)
+    }
+)
+
 if (!isGeneric("decay")) {
     setGeneric("decay", function(x="twk", range = "numeric", nbins = "numeric", ...){ standardGeneric("decay") })
 }
