@@ -21,15 +21,11 @@
 # DEALINGS IN THE SOFTWARE.
 # ################################################################
 
-#ROOT_DIR := $(abspath .)
-#$(info The compilation root directory is: $(ROOT_DIR))                          
-#$(info The name of the shared library to be created is: $(SHLIB))               
-#$(info The place R should look for librcaf_core.so is: $(abspath ./rtomahawk)) 
-#$(info The place R should look for librcaf_io.so is: $(abspath ./rtomahawk))
-
+# R C/C++ sources to build.
 CXX_SOURCE := $(wildcard *.cpp)
-C_SOURCE   :s= 
+C_SOURCE   := 
 
+# Compiler flags for objects used within R.
 OPTFLAGS      = -msse4.2
 CXXFLAGS      = -std=c++0x
 CFLAGS        = -std=c99
@@ -39,7 +35,6 @@ RCPP_CXXFLAGS := $(shell echo `$(R_HOME)/bin/Rscript -e "Rcpp:::CxxFlags()"`)
 RCPP_LDFLAGS := $(shell echo `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"'`) -ltomahawk
 R_PATH := $(shell echo `$(R_HOME)/bin/Rscript -e "cat(R.home('include'))"`)
 
-#$(info evaluate $(R_PATH))
 PKG_CPPFLAGS := $(RCPP_CXXFLAGS) -I$(R_PATH) -I$(abspath ./tomahawk/include) -I$(abspath ./tomahawk/lib)
 PKG_LIBS     := $(RCPP_LDFLAGS) -L$(abspath ./tomahawk) -Wl,-rpath,${R_PACKAGE_DIR}/usrlib${R_ARCH}
 
@@ -70,25 +65,27 @@ TWK_LIBVER       := $(shell echo $(TWK_LIBVER_SCRIPT))
 
 .PHONY: all zstd htslib twk clean
 
-all: clean zstd htslib twk $(OBJECTS)
+all: zstd htslib twk $(OBJECTS)
 	cp tomahawk/libtomahawk.so.$(TWK_LIBVER) .
 	cp -P tomahawk/libtomahawk.so .
 	cp htslib/libhts.so .
-	cp -P htslib/libhts.so.2to3part2 .
+	cp -P htslib/libhts.so.* .
 	cp zstd/lib/libzstd.so.$(ZSTD_LIBVER) .
 	cp -P zstd/lib/libzstd.so .
 	mkdir -p "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
 	mkdir -p "${R_PACKAGE_DIR}/include/htslib"
 	mkdir -p "${R_PACKAGE_DIR}/include/zstd"
+	mkdir -p "${R_PACKAGE_DIR}/include/tomahawk"
 	cp -P {*.so,*.so.*} "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
 	cp htslib/htslib/*.h "${R_PACKAGE_DIR}/include/htslib"
 	cp zstd/lib/zstd.h "${R_PACKAGE_DIR}/include/zstd"
 	cp zstd/lib/dictBuilder/zdict.h "${R_PACKAGE_DIR}/include/zstd"
 	cp zstd/lib/deprecated/zbuff.h "${R_PACKAGE_DIR}/include/zstd"
 	cp zstd/lib/common/zstd_errors.h "${R_PACKAGE_DIR}/include/zstd"
+	cp tomahawk/include/*.h "${R_PACKAGE_DIR}/include/tomahawk"
 
 %.o: %.cpp
-	g++ -std=c++0x $(OPTFLAGS) $(PKG_CPPFLAGS) -fpic -c -o $@ $<	
+	g++ -std=c++0x $(OPTFLAGS) $(PKG_CPPFLAGS) -fpic -c -o $@ $<
 	
 zstd:
 	cd zstd && $(MAKE) default && cd ..
