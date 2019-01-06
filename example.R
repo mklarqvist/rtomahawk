@@ -27,9 +27,10 @@ posLD<-pos[pos%in%ld$posB]
 pvals<-p[snp$Position>32e6&snp$Position<33e6]
 rownames(ld)<-ld$posB
 ld<-ld[as.character(posLD),]
-lzcolors<-c("darkblue","blue","green","orange","red")
+lzcolors<-c("#357EBDFF","#46B8DAFF","#5CB85CFF","#EEA236FF","#D43F3AFF")
 
-plot(gmap$chr6[gmap$chr6$position>32e6&gmap$chr6$position<33e6,c(1,2)],type="l",col="blue",ylim=c(0,100),xaxs="i",yaxs="i",las=2)
-points(pos[which(!pos%in%posLD)],pvals[which(!pos%in%posLD)]/round(max(pvals)+5,-1)*100,pch=20,cex=.66,col="black")
+plot(gmap$chr6[gmap$chr6$position>from&gmap$chr6$position<to,c(1,2)],type="l",col="blue",ylim=c(0,100),xaxs="i",yaxs="i",las=2)
+points(pos[which(!pos%in%posLD)],pvals[which(!pos%in%posLD)]/round(max(pvals)+5,-1)*100,pch=20,cex=.9,col="grey")
 points(pos[which(pos%in%posLD)],pvals[which(pos%in%posLD)]/round(max(pvals)+5,-1)*100,pch=21,cex=1,bg=lzcolors[as.numeric(cut(ld$R2,breaks = seq(0,1,length.out = 6),right = T))])
+points(32626302, pvals[which(pos==32626302)]/round(max(pvals)+5,-1)*100, pch=24, bg="purple")
 rug(pos,side=3,ticksize = -0.03)
