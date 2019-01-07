@@ -7,5 +7,7 @@ Author: Marcus D. R. Klarqvist
 Maintainer: Marcus D. R. Klarqvist <mk819@cam.ac.uk>
 Description: Tomahawk is a unified framework for computing, storing, querying, aggregating, and plotting genome-wide linkage-disequilibrium (LD) data in population-scaled cohorts. This package is an R interface to Tomahawk
 License: MIT
+URL: https://github.com/mklarqvist/tomahawk
+BugReports: https://github.com/mklarqvist/tomahawk/issues
 Imports: Rcpp (>= 1.0.0)
 LinkingTo: Rcpp
