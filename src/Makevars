@@ -97,4 +97,4 @@ twk:
 	cd tomahawk && $(MAKE) library library=true && cd ..
 	
 clean:
-	rm -f libtomahawk.so $(OBJECTS) $(CPP_DEPS) $(SHLIB)
+	rm -f *.so *.so.* $(OBJECTS) $(CPP_DEPS) $(SHLIB)

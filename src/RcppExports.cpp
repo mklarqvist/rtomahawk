@@ -63,6 +63,54 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// twk_read_aggregate
+Rcpp::S4 twk_read_aggregate(const std::string input);
+RcppExport SEXP _rtomahawk_twk_read_aggregate(SEXP inputSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string >::type input(inputSEXP);
+    rcpp_result_gen = Rcpp::wrap(twk_read_aggregate(input));
+    return rcpp_result_gen;
+END_RCPP
+}
+// twk_aggregate
+Rcpp::S4 twk_aggregate(const Rcpp::S4& twk, std::string agg_name, std::string red_name, int32_t xbins, int32_t ybins, int32_t min_count, int32_t threads, bool verbose, bool progress);
+RcppExport SEXP _rtomahawk_twk_aggregate(SEXP twkSEXP, SEXP agg_nameSEXP, SEXP red_nameSEXP, SEXP xbinsSEXP, SEXP ybinsSEXP, SEXP min_countSEXP, SEXP threadsSEXP, SEXP verboseSEXP, SEXP progressSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type twk(twkSEXP);
+    Rcpp::traits::input_parameter< std::string >::type agg_name(agg_nameSEXP);
+    Rcpp::traits::input_parameter< std::string >::type red_name(red_nameSEXP);
+    Rcpp::traits::input_parameter< int32_t >::type xbins(xbinsSEXP);
+    Rcpp::traits::input_parameter< int32_t >::type ybins(ybinsSEXP);
+    Rcpp::traits::input_parameter< int32_t >::type min_count(min_countSEXP);
+    Rcpp::traits::input_parameter< int32_t >::type threads(threadsSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< bool >::type progress(progressSEXP);
+    rcpp_result_gen = Rcpp::wrap(twk_aggregate(twk, agg_name, red_name, xbins, ybins, min_count, threads, verbose, progress));
+    return rcpp_result_gen;
+END_RCPP
+}
+// twk_scalc
+Rcpp::S4 twk_scalc(const Rcpp::S4& twk, std::string interval, int32_t window, double minP, double minR2, int32_t threads, bool verbose, bool progress);
+RcppExport SEXP _rtomahawk_twk_scalc(SEXP twkSEXP, SEXP intervalSEXP, SEXP windowSEXP, SEXP minPSEXP, SEXP minR2SEXP, SEXP threadsSEXP, SEXP verboseSEXP, SEXP progressSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type twk(twkSEXP);
+    Rcpp::traits::input_parameter< std::string >::type interval(intervalSEXP);
+    Rcpp::traits::input_parameter< int32_t >::type window(windowSEXP);
+    Rcpp::traits::input_parameter< double >::type minP(minPSEXP);
+    Rcpp::traits::input_parameter< double >::type minR2(minR2SEXP);
+    Rcpp::traits::input_parameter< int32_t >::type threads(threadsSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< bool >::type progress(progressSEXP);
+    rcpp_result_gen = Rcpp::wrap(twk_scalc(twk, interval, window, minP, minR2, threads, verbose, progress));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rtomahawk_twk_version", (DL_FUNC) &_rtomahawk_twk_version, 0},
@@ -70,6 +118,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rtomahawk_twk_tail", (DL_FUNC) &_rtomahawk_twk_tail, 2},
     {"_rtomahawk_LoadHeader", (DL_FUNC) &_rtomahawk_LoadHeader, 1},
     {"_rtomahawk_twk_decay", (DL_FUNC) &_rtomahawk_twk_decay, 3},
+    {"_rtomahawk_twk_read_aggregate", (DL_FUNC) &_rtomahawk_twk_read_aggregate, 1},
+    {"_rtomahawk_twk_aggregate", (DL_FUNC) &_rtomahawk_twk_aggregate, 9},
+    {"_rtomahawk_twk_scalc", (DL_FUNC) &_rtomahawk_twk_scalc, 8},
     {NULL, NULL, 0}
 };
 

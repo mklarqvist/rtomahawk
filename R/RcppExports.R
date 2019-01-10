@@ -21,3 +21,15 @@ twk_decay <- function(obj, range, n_bins) {
     .Call(`_rtomahawk_twk_decay`, obj, range, n_bins)
 }
 
+twk_read_aggregate <- function(input) {
+    .Call(`_rtomahawk_twk_read_aggregate`, input)
+}
+
+twk_aggregate <- function(twk, agg_name, red_name, xbins, ybins, min_count, threads = 1L, verbose = FALSE, progress = FALSE) {
+    .Call(`_rtomahawk_twk_aggregate`, twk, agg_name, red_name, xbins, ybins, min_count, threads, verbose, progress)
+}
+
+twk_scalc <- function(twk, interval, window, minP = 1, minR2 = 0.05, threads = 1L, verbose = FALSE, progress = FALSE) {
+    .Call(`_rtomahawk_twk_scalc`, twk, interval, window, minP, minR2, threads, verbose, progress)
+}
+

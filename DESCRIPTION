@@ -9,5 +9,7 @@ Description: Tomahawk is a unified framework for computing, storing, querying, a
 License: MIT
 URL: https://github.com/mklarqvist/tomahawk
 BugReports: https://github.com/mklarqvist/tomahawk/issues
-Imports: Rcpp (>= 1.0.0)
+Imports: 
+	Rcpp (>= 1.0.0),
+	GenomicRanges
 LinkingTo: Rcpp

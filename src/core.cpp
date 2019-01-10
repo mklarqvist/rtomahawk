@@ -6,15 +6,17 @@
 #include "tomahawk.h"
 #include "utility.h"
 #include "two_reader.h"
+#include "ld.h"
 
 /**
  * @brief Supportive structure for transposing internal tomahawk::twk1_two_t 
  *        records stored in a record-centric fashion into field-centric (column) 
  *        stores as required by R data.frame structures.
- * 
  */
 struct twk_two_transpose_t {
-    twk_two_transpose_t(uint32_t n){
+    twk_two_transpose_t(uint32_t n) : include_flag(~(uint16_t)0)
+    {
+        // Todo: fix reserves when not all FLAGs are set.
         for(int i = 0; i < 3;  ++i) cols[i].reserve(n);
         for(int i = 0; i < 2;  ++i) scols[i].reserve(n);
         for(int i = 0; i < 11; ++i) dcols[i].reserve(n);
@@ -30,8 +32,8 @@ struct twk_two_transpose_t {
     void Add(const tomahawk::twk1_two_t& rec, const tomahawk::two_reader& oreader){
         // Integer
         cols[0].push_back(rec.controller);
-        cols[1].push_back(rec.Apos);
-        cols[2].push_back(rec.Bpos);
+        cols[1].push_back(rec.Apos + 1); // 1-base output.
+        cols[2].push_back(rec.Bpos + 1); // 1-base output.
         // String
         scols[0].push_back(oreader.hdr.contigs_[rec.ridA].name);
         scols[1].push_back(oreader.hdr.contigs_[rec.ridB].name);
@@ -49,6 +51,12 @@ struct twk_two_transpose_t {
         dcols[10].push_back(rec.ChiSqModel);
     }
 
+    /**
+     * @brief Constructs a Rcpp::DataFrame from the internal column vectors
+     *        representing twk1_two_t records
+     * 
+     * @return * Rcpp::DataFrame 
+     */
     Rcpp::DataFrame GetDataFrame() const {
         return(Rcpp::DataFrame::create(Rcpp::Named("FLAG")=cols[0],
                                     Rcpp::Named("ridA")=scols[0],
@@ -68,6 +76,8 @@ struct twk_two_transpose_t {
                                     Rcpp::Named("ChiSqModel")=dcols[10]));
     }
 
+public:
+    uint16_t include_flag;
     std::vector<uint32_t>    cols[3];
     std::vector<std::string> scols[2];
     std::vector<double>      dcols[11];
@@ -75,7 +85,7 @@ struct twk_two_transpose_t {
 
 // [[Rcpp::export]]
 std::string twk_version(){
-    return(tomahawk::TOMAHAWK_LIB_VERSION);
+    return(tomahawk::LibrariesString());
 }
 
 // [[Rcpp::export]]
@@ -268,9 +278,7 @@ Rcpp::S4 LoadHeader(std::string input){
 
     // Open file handle.
     if(oreader.Open(inreal) == false){
-        Rcpp::Rcout << tomahawk::utility::timestamp("ERROR") << "Failed to open: \"" << inreal << "\"!" << std::endl;
-        return(twk);
-    //return Rcpp::DataFrame::create();
+        Rcpp::stop(std::string("Failed to open: \"" + inreal + "\"!"));
     }
 
     // Start constructing contig component.
@@ -334,4 +342,222 @@ Rcpp::DataFrame twk_decay(Rcpp::S4& obj, uint32_t range, uint32_t n_bins){
                                 Rcpp::Named("to")=to,
                                 Rcpp::Named("mean")=mean_out,
                                 Rcpp::Named("freq")=freq));
+}
+
+Rcpp::S4 twk_agg_to_s4(const tomahawk::twk1_aggregate_t& agg){
+    // Create return class.
+    Rcpp::Language twk_type("new", "twk_agg");
+    Rcpp::S4 twk( twk_type.eval() ); //use Rcpp::Language to create and assign a twk_header S4 object.
+
+    // Transmute the C++ twk1_aggregate_t struct into the S4 `twk_agg` class.
+    twk.slot("n") = agg.n;
+    twk.slot("x") = agg.x;
+    twk.slot("y") = agg.y;
+    twk.slot("bpx") = agg.bpx;
+    twk.slot("bpy") = agg.bpy;
+    twk.slot("n_original") = agg.n_original;
+    twk.slot("range") = agg.range;
+
+    // Construct R-version of data matrix.
+    Rcpp::NumericMatrix data(agg.x, agg.y);
+    for(uint32_t i = 0; i < agg.n; ++i) data[i] = agg.data[i];
+    twk.slot("data") = data;
+
+    // Construct offset data.frame from a vector of structs.
+    Rcpp::NumericVector rid_range(agg.rid_offsets.size()), rid_min(agg.rid_offsets.size()), rid_max(agg.rid_offsets.size());
+    for(uint32_t i = 0; i < agg.rid_offsets.size(); ++i){
+        rid_range[i] = agg.rid_offsets[i].range;
+        rid_min[i]   = agg.rid_offsets[i].min;
+        rid_max[i]   = agg.rid_offsets[i].max;
+    }
+    twk.slot("offsets") = Rcpp::DataFrame::create(
+                            Rcpp::Named("range")=rid_range,
+                            Rcpp::Named("min")=rid_min,
+                            Rcpp::Named("max")=rid_max);
+
+    return(twk);
+}
+
+/**
+ * @brief Reads a binary twk1_aggregate_t file from disk and converts it into
+ *        rtomahawk S4 version `twk_agg`.
+ * 
+ * @param input     Input string to file path containing the target aggregate file.
+ * @return Rcpp::S4 Returns a `twk_agg` S4-class.
+ */
+// [[Rcpp::export]]
+Rcpp::S4 twk_read_aggregate(const std::string input){
+    if(input.size() == 0)
+        Rcpp::stop("Input path must cannot be empty!");
+
+    // Make use of R internal function path.expand() to expand out
+    // a relative path into an absolute path as required by the API.
+    Rcpp::Function f("path.expand");
+    std::string inreal = Rcpp::as<std::string>(f(input));
+
+    tomahawk::twk1_aggregate_t agg;
+    if(agg.Open(inreal) == false)
+        Rcpp::stop("Failed to open file");
+
+    return(twk_agg_to_s4(agg));
+}
+
+// [[Rcpp::export]]
+Rcpp::S4 twk_aggregate(const Rcpp::S4& twk,
+                       std::string agg_name, std::string red_name,
+                       int32_t xbins, int32_t ybins, int32_t min_count,
+                       int32_t threads = 1,
+                       bool verbose = false, bool progress = false)
+{
+    if (! twk.inherits("twk"))
+        Rcpp::stop("Input must be a twk() model object.");
+
+    if(Rcpp::as<std::string>(twk.slot("file.path")).size() == 0)
+        Rcpp::stop("Input path cannot be empty!");
+
+    if(agg_name.size() == 0){
+		Rcpp::stop("No aggregation function provided...");
+	}
+
+	if(red_name.size() == 0){
+		Rcpp::stop("No reduce function provided...");
+	}
+
+	if(min_count <= 0){
+		Rcpp::stop("Cannot have a min-cutoff <= 0...");
+	}
+
+	if(threads <= 0){
+		Rcpp::stop("Cannot have <= 0 threads..");
+	}
+
+    if(xbins <= 0){
+		Rcpp::stop("Cannot have <= 0 xbins..");
+	}
+
+    if(ybins <= 0){
+		Rcpp::stop("Cannot have <= 0 ybins..");
+	}
+
+    tomahawk::twk_two_settings settings;
+    settings.in = Rcpp::as<std::string>(twk.slot("file.path"));
+    settings.n_threads = threads;
+
+    tomahawk::two_reader oreader;
+    tomahawk::twk1_aggregate_t agg;
+    if(oreader.Aggregate(agg, settings, agg_name, red_name, xbins, ybins, min_count, verbose, progress) == false)
+        Rcpp::stop("failed");
+
+    Rcpp::S4 ret = twk_agg_to_s4(agg);
+    ret.slot("twk") = twk;
+    ret.slot("aggregation") = agg_name;
+    ret.slot("reduction") = red_name;
+
+    return(ret);
+}
+
+// [[Rcpp::export]]
+Rcpp::S4 twk_scalc(const Rcpp::S4& twk, 
+                   std::string interval, 
+                   int32_t window, 
+                   double minP = 1, 
+                   double minR2 = 0.05,
+                   int32_t threads = 1, 
+                   bool verbose = false, 
+                   bool progress = false)
+{
+    if (! twk.inherits("twk"))
+        Rcpp::stop("Input must be a twk() model object.");
+
+    if(Rcpp::as<std::string>(twk.slot("file.path")).size() == 0)
+        Rcpp::stop("Input path cannot be empty!");
+
+    // Make use of R internal function tempfile() to expand out
+    // a tempfile required to store the output at.
+    Rcpp::Function f("tempfile");
+    std::string tempfile = Rcpp::as<std::string>(f(""));
+
+    if(tempfile.size() == 0){
+		Rcpp::stop("Must provide an output path...");
+	}
+    
+    if(window <= 1){
+        Rcpp::stop("Cannot have window <= 1...");
+    }
+
+	if(threads <= 0){
+		Rcpp::stop("Cannot have <= 0 threads...");
+	}
+
+    if(minP < 0 || minP > 1){
+		Rcpp::stop("Cannot have 0 < P > 1 P value threshold...");
+	}
+
+    if(minR2 < 0 || minR2 > 1){
+		Rcpp::stop("Cannot have 0 < P > 1 R2 value threshold...");
+	}
+
+    tomahawk::twk_ld_settings settings;
+    settings.in = Rcpp::as<std::string>(twk.slot("file.path"));
+    settings.out = tempfile + ".two";
+    settings.n_threads = threads;
+    settings.ival_strings.push_back(interval);
+    settings.l_surrounding = window;
+    settings.minP = minP;
+    settings.minR2 = minR2;
+    settings.single = true;
+
+    tomahawk::twk_ld ld;
+	if(ld.ComputeSingle(settings, verbose, progress) == false)
+        Rcpp::stop("failed");
+
+    // Todo: if success then load entire dataset into @data slot
+    //       by copying input twk class and adding @data to it.
+	
+    // Iff success then load new
+    Rcpp::Language twk_type("new", "twk");
+    Rcpp::S4 otwk( twk_type.eval() ); //use Rcpp::Language to create and assign a twk_header S4 object.
+    Rcpp::Language hdr("new", "twk_header");
+    Rcpp::S4 header( hdr.eval() );
+    Rcpp::Language idx("new", "twk_index");
+    Rcpp::S4 index( idx.eval() );
+    Rcpp::Language datac("new", "twk_data");
+    Rcpp::S4 data( datac.eval() );
+
+    // New instance of reader.
+    tomahawk::two_reader oreader;
+
+    // Open file handle.
+    if(oreader.Open(settings.out) == false){
+        Rcpp::stop(std::string("Failed to open: \"" + settings.out + "\"!"));
+    }
+
+    // Start constructing contig component.
+    LoadContigs(oreader, header);
+    LoadSamples(oreader, header);
+    LoadIndex(oreader, index);
+    LoadHeaderLiterals(oreader, header);
+
+    otwk.slot("file.path") = settings.out;
+    otwk.slot("index") = index;
+    otwk.slot("header") = header;
+
+    // Peek at index
+    uint32_t n_avail = 0;
+    for(int i = 0; i < oreader.index.n; ++i)
+        n_avail += oreader.index.ent[i].n;
+
+    twk_two_transpose_t recs(n_avail);
+
+    int i = 0;
+    while(oreader.NextRecord()){
+        recs.Add(*oreader.it.rcd, oreader);
+    }
+    data.slot("data") = recs.GetDataFrame();
+    otwk.slot("data") = data;
+
+    Rcpp::Function unlink("unlink");
+    unlink(settings.out);
+
+    return(otwk);
 }
