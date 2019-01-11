@@ -3,11 +3,10 @@
 \alias{rtomahawk}
 \docType{package}
 \title{
-  A short title line describing what the package does
+  Tools for computing, querying and storing linkage-disequilibrium data
 }
 \description{
-  A more detailed description of what the package does. A length
-  of about one to five lines is recommended.
+  Tomahawk is a unified framework for computing, storing, querying, aggregating, and plotting genome-wide linkage-disequilibrium (LD) data in population-scaled cohorts. This package is an R interface to Tomahawk
 }
 \details{
   This section should provide a more detailed overview of how to use the

@@ -39,14 +39,14 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// LoadHeader
-Rcpp::S4 LoadHeader(std::string input);
-RcppExport SEXP _rtomahawk_LoadHeader(SEXP inputSEXP) {
+// OpenTomahawkOutput
+Rcpp::S4 OpenTomahawkOutput(std::string input);
+RcppExport SEXP _rtomahawk_OpenTomahawkOutput(SEXP inputSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::string >::type input(inputSEXP);
-    rcpp_result_gen = Rcpp::wrap(LoadHeader(input));
+    rcpp_result_gen = Rcpp::wrap(OpenTomahawkOutput(input));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -116,7 +116,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rtomahawk_twk_version", (DL_FUNC) &_rtomahawk_twk_version, 0},
     {"_rtomahawk_twk_head", (DL_FUNC) &_rtomahawk_twk_head, 2},
     {"_rtomahawk_twk_tail", (DL_FUNC) &_rtomahawk_twk_tail, 2},
-    {"_rtomahawk_LoadHeader", (DL_FUNC) &_rtomahawk_LoadHeader, 1},
+    {"_rtomahawk_OpenTomahawkOutput", (DL_FUNC) &_rtomahawk_OpenTomahawkOutput, 1},
     {"_rtomahawk_twk_decay", (DL_FUNC) &_rtomahawk_twk_decay, 3},
     {"_rtomahawk_twk_read_aggregate", (DL_FUNC) &_rtomahawk_twk_read_aggregate, 1},
     {"_rtomahawk_twk_aggregate", (DL_FUNC) &_rtomahawk_twk_aggregate, 9},

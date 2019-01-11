@@ -83,7 +83,7 @@ public:
     std::vector<double>      dcols[11];
 };
 
-// [[Rcpp::export]]
+// [[Rcpp::export(name=".twk_version")]]
 std::string twk_version(){
     return(tomahawk::LibrariesString());
 }
@@ -255,7 +255,7 @@ bool LoadHeaderLiterals(const tomahawk::two_reader& oreader, Rcpp::S4& obj){
  * @return Rcpp::DataFrame 
  */
 // [[Rcpp::export]]
-Rcpp::S4 LoadHeader(std::string input){
+Rcpp::S4 OpenTomahawkOutput(std::string input){
     // Make use of R internal function path.expand() to expand out
     // a relative path into an absolute path as required by the API.
     Rcpp::Function f("path.expand");
@@ -295,7 +295,7 @@ Rcpp::S4 LoadHeader(std::string input){
     return(twk);
 }
 
-// [[Rcpp::export]]
+// [[Rcpp::export(name=".twk_decay")]]
 Rcpp::DataFrame twk_decay(Rcpp::S4& obj, uint32_t range, uint32_t n_bins){
     if (! obj.inherits("twk"))
         Rcpp::stop("Input must be a twk() model object.");
@@ -385,7 +385,7 @@ Rcpp::S4 twk_agg_to_s4(const tomahawk::twk1_aggregate_t& agg){
  * @param input     Input string to file path containing the target aggregate file.
  * @return Rcpp::S4 Returns a `twk_agg` S4-class.
  */
-// [[Rcpp::export]]
+// [[Rcpp::export(name=".twk_read_aggregate")]]
 Rcpp::S4 twk_read_aggregate(const std::string input){
     if(input.size() == 0)
         Rcpp::stop("Input path must cannot be empty!");
@@ -402,7 +402,7 @@ Rcpp::S4 twk_read_aggregate(const std::string input){
     return(twk_agg_to_s4(agg));
 }
 
-// [[Rcpp::export]]
+// [[Rcpp::export(name=".twk_aggregate")]]
 Rcpp::S4 twk_aggregate(const Rcpp::S4& twk,
                        std::string agg_name, std::string red_name,
                        int32_t xbins, int32_t ybins, int32_t min_count,
@@ -423,8 +423,8 @@ Rcpp::S4 twk_aggregate(const Rcpp::S4& twk,
 		Rcpp::stop("No reduce function provided...");
 	}
 
-	if(min_count <= 0){
-		Rcpp::stop("Cannot have a min-cutoff <= 0...");
+	if(min_count < 0){
+		Rcpp::stop("Cannot have a min-cutoff < 0...");
 	}
 
 	if(threads <= 0){
@@ -456,7 +456,23 @@ Rcpp::S4 twk_aggregate(const Rcpp::S4& twk,
     return(ret);
 }
 
-// [[Rcpp::export]]
+/**
+ * @brief Calculate the pairwise linkage-disequilibrium coefficients for a 
+ *        target region vs its neighbourhood. Note that enabling the progress
+ *        flag will detach a progress thread that will NOT terminate if run in
+ *        R!
+ * 
+ * @param twk       Input Tomahawk file.
+ * @param interval  Target interval string formatted as "CHR:POS".
+ * @param window    Neighbourhood in base-pairs.
+ * @param minP      Largest P-value to report.
+ * @param minR2     Smallest R2-value to report.
+ * @param threads   Number of threads used during unpacking and compute.
+ * @param verbose   Should messages be written to std::cerr?
+ * @param progress  Should progress be reported?
+ * @return Rcpp::S4 Returns a R S4-class of type 'twk_agg'.
+ */
+// [[Rcpp::export(name=".twk_scalc")]]
 Rcpp::S4 twk_scalc(const Rcpp::S4& twk, 
                    std::string interval, 
                    int32_t window, 
@@ -514,7 +530,7 @@ Rcpp::S4 twk_scalc(const Rcpp::S4& twk,
     // Todo: if success then load entire dataset into @data slot
     //       by copying input twk class and adding @data to it.
 	
-    // Iff success then load new
+    // Iff success then load new 'twk' object.
     Rcpp::Language twk_type("new", "twk");
     Rcpp::S4 otwk( twk_type.eval() ); //use Rcpp::Language to create and assign a twk_header S4 object.
     Rcpp::Language hdr("new", "twk_header");
@@ -556,6 +572,7 @@ Rcpp::S4 twk_scalc(const Rcpp::S4& twk,
     data.slot("data") = recs.GetDataFrame();
     otwk.slot("data") = data;
 
+    // Delete temporary file after loading into memory.
     Rcpp::Function unlink("unlink");
     unlink(settings.out);
 

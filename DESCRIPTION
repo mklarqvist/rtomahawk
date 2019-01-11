@@ -13,3 +13,4 @@ Imports:
 	Rcpp (>= 1.0.0),
 	GenomicRanges
 LinkingTo: Rcpp
+RoxygenNote: 6.1.1
