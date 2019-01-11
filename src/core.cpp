@@ -1,5 +1,6 @@
 #include <string>
 #include <sstream>
+#include <regex>
 
 #include <Rcpp.h>
 
@@ -7,6 +8,29 @@
 #include "utility.h"
 #include "two_reader.h"
 #include "ld.h"
+
+// [[Rcpp::export(name=".checkIntervalContig")]]
+bool CheckIntervalContig(const std::string& interval){
+    return(std::regex_match(interval, tomahawk::TWK_REGEX_CONTIG_ONLY));
+}
+
+// [[Rcpp::export(name=".checkIntervalContigPosition")]]
+bool CheckIntervalContigPosition(const std::string& interval){
+    return(std::regex_match(interval, tomahawk::TWK_REGEX_CONTIG_POSITION));
+}
+
+// [[Rcpp::export(name=".checkIntervalContigRange")]]
+bool CheckIntervalContigRange(const std::string& interval){
+    return(std::regex_match(interval, tomahawk::TWK_REGEX_CONTIG_RANGE));
+}
+
+// [[Rcpp::export(name=".checkInterval")]]
+int CheckInterval(const std::string& interval){
+    if(CheckIntervalContig(interval)) return(1);
+    else if(CheckIntervalContigPosition(interval)) return(2);
+    else if(CheckIntervalContigRange(interval)) return(3);
+    return(-1);
+}
 
 /**
  * @brief Supportive structure for transposing internal tomahawk::twk1_two_t 
@@ -88,7 +112,7 @@ std::string twk_version(){
     return(tomahawk::LibrariesString());
 }
 
-// [[Rcpp::export]]
+// [[Rcpp::export(name=".twk_head")]]
 Rcpp::DataFrame twk_head(Rcpp::S4& obj, uint32_t n_records){
     if (! obj.inherits("twk"))
         Rcpp::stop("Input must be a twk() model object.");
@@ -101,8 +125,7 @@ Rcpp::DataFrame twk_head(Rcpp::S4& obj, uint32_t n_records){
 
     // Open file handle.
     if(oreader.Open(Rcpp::as<std::string>(obj.slot("file.path"))) == false){
-        Rcpp::Rcout << tomahawk::utility::timestamp("ERROR") << "Failed to open: \"" << Rcpp::as<std::string>(obj.slot("file.path")) << "\"!" << std::endl;
-        return Rcpp::DataFrame::create();
+        Rcpp::stop(tomahawk::utility::timestamp("ERROR") + "Failed to open: \"" + Rcpp::as<std::string>(obj.slot("file.path")) + "\"!");
     }
 
     // Peek at index
@@ -124,7 +147,7 @@ Rcpp::DataFrame twk_head(Rcpp::S4& obj, uint32_t n_records){
     return(recs.GetDataFrame());
 }
 
-// [[Rcpp::export]]
+// [[Rcpp::export(name=".twk_tail")]]
 Rcpp::DataFrame twk_tail(Rcpp::S4& obj, uint32_t n_records){
     if (! obj.inherits("twk"))
         Rcpp::stop("Input must be a twk() model object.");
@@ -134,8 +157,7 @@ Rcpp::DataFrame twk_tail(Rcpp::S4& obj, uint32_t n_records){
 
     // Open file handle.
     if(oreader.Open(Rcpp::as<std::string>(obj.slot("file.path"))) == false){
-        Rcpp::Rcout << tomahawk::utility::timestamp("ERROR") << "Failed to open: \"" << Rcpp::as<std::string>(obj.slot("file.path")) << "\"!" << std::endl;
-        return Rcpp::DataFrame::create();
+        Rcpp::stop(tomahawk::utility::timestamp("ERROR") + "Failed to open: \"" + Rcpp::as<std::string>(obj.slot("file.path")) + "\"!");
     }
 
     uint32_t n_avail = 0;
@@ -158,7 +180,7 @@ Rcpp::DataFrame twk_tail(Rcpp::S4& obj, uint32_t n_records){
 
     if(oreader.stream->good() == false){
         Rcpp::Rcout << tomahawk::utility::timestamp("ERROR") << "Failed to seek in file: \"" << Rcpp::as<std::string>(obj.slot("file.path")) << "\"!" << std::endl;
-        return Rcpp::DataFrame::create();
+        Rcpp::stop("failed");
     }
     
     twk_two_transpose_t recs(n_records);
@@ -251,10 +273,10 @@ bool LoadHeaderLiterals(const tomahawk::two_reader& oreader, Rcpp::S4& obj){
 /**
  * @brief Retrieves information from the Tomahawk output file header.
  * 
- * @param input String input file
- * @return Rcpp::DataFrame 
+ * @param input     String input file.
+ * @return Rcpp::S4 Returns an R S4-class instance of `twk`.
  */
-// [[Rcpp::export]]
+// [[Rcpp::export(name=".OpenTomahawkOutput")]]
 Rcpp::S4 OpenTomahawkOutput(std::string input){
     // Make use of R internal function path.expand() to expand out
     // a relative path into an absolute path as required by the API.
@@ -278,7 +300,7 @@ Rcpp::S4 OpenTomahawkOutput(std::string input){
 
     // Open file handle.
     if(oreader.Open(inreal) == false){
-        Rcpp::stop(std::string("Failed to open: \"" + inreal + "\"!"));
+        Rcpp::stop(tomahawk::utility::timestamp("ERROR") + "Failed to open: \"" + inreal + "\"!");
     }
 
     // Start constructing contig component.
@@ -305,12 +327,9 @@ Rcpp::DataFrame twk_decay(Rcpp::S4& obj, uint32_t range, uint32_t n_bins){
 
     // Open file handle.
     if(oreader.Open(Rcpp::as<std::string>(obj.slot("file.path"))) == false){
-        Rcpp::Rcout << tomahawk::utility::timestamp("ERROR") << "Failed to open: \"" << Rcpp::as<std::string>(obj.slot("file.path")) << "\"!" << std::endl;
-        return Rcpp::DataFrame::create();
+        Rcpp::stop(tomahawk::utility::timestamp("ERROR") + "Failed to open: \"" + Rcpp::as<std::string>(obj.slot("file.path")) + "\"!");
     }
 
-    //uint64_t n_range = 10e6;
-	//uint32_t n_bins  = 1000;
 	uint32_t n_range_bin = range/n_bins;
 	std::vector<std::pair<double,uint64_t>> decay(n_bins+1,{0,0});
 
@@ -329,15 +348,13 @@ Rcpp::DataFrame twk_decay(Rcpp::S4& obj, uint32_t range, uint32_t n_bins){
     std::vector<double> mean_out;
     std::vector<uint64_t> freq;
 
-	//std::cout << "From\tTo\tMean\tFrequency\n";
 	for(int i = 0; i < decay.size(); ++i){
         from.push_back((i*n_range_bin)); 
         to.push_back(((i+1)*n_range_bin));
         mean_out.push_back(decay[i].first/std::max(decay[i].second,(uint64_t)1));
         freq.push_back(decay[i].second);
-		//std::cout << (i*n_range_bin) << '\t' << ((i+1)*n_range_bin) << '\t' << decay[i].first/std::max(decay[i].second,(uint64_t)1) << '\t' << decay[i].second << '\n';
 	}
-	//std::cout.flush();
+
     return(Rcpp::DataFrame::create(Rcpp::Named("from")=from,
                                 Rcpp::Named("to")=to,
                                 Rcpp::Named("mean")=mean_out,
@@ -388,7 +405,7 @@ Rcpp::S4 twk_agg_to_s4(const tomahawk::twk1_aggregate_t& agg){
 // [[Rcpp::export(name=".twk_read_aggregate")]]
 Rcpp::S4 twk_read_aggregate(const std::string input){
     if(input.size() == 0)
-        Rcpp::stop("Input path must cannot be empty!");
+        Rcpp::stop("Input path cannot be empty!");
 
     // Make use of R internal function path.expand() to expand out
     // a relative path into an absolute path as required by the API.
@@ -470,7 +487,7 @@ Rcpp::S4 twk_aggregate(const Rcpp::S4& twk,
  * @param threads   Number of threads used during unpacking and compute.
  * @param verbose   Should messages be written to std::cerr?
  * @param progress  Should progress be reported?
- * @return Rcpp::S4 Returns a R S4-class of type 'twk_agg'.
+ * @return Rcpp::S4 Returns a R S4-class of type `twk_agg`.
  */
 // [[Rcpp::export(name=".twk_scalc")]]
 Rcpp::S4 twk_scalc(const Rcpp::S4& twk, 
@@ -526,9 +543,6 @@ Rcpp::S4 twk_scalc(const Rcpp::S4& twk,
     tomahawk::twk_ld ld;
 	if(ld.ComputeSingle(settings, verbose, progress) == false)
         Rcpp::stop("failed");
-
-    // Todo: if success then load entire dataset into @data slot
-    //       by copying input twk class and adding @data to it.
 	
     // Iff success then load new 'twk' object.
     Rcpp::Language twk_type("new", "twk");
@@ -545,7 +559,7 @@ Rcpp::S4 twk_scalc(const Rcpp::S4& twk,
 
     // Open file handle.
     if(oreader.Open(settings.out) == false){
-        Rcpp::stop(std::string("Failed to open: \"" + settings.out + "\"!"));
+        Rcpp::stop(tomahawk::utility::timestamp("ERROR") + "Failed to open: \"" + settings.out + "\"!");
     }
 
     // Start constructing contig component.

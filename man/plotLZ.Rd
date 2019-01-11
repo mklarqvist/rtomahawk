@@ -2,7 +2,7 @@
 % Please edit documentation in R/common.R
 \name{plotLZ}
 \alias{plotLZ}
-\title{Plotting and computing target LD}
+\title{Plot Locuszoom-like graph for a location its GWAS P-value and LD association}
 \usage{
 plotLZ(x = "twk", interval = "ANY", snp = "data.frame",
   gmap = "list", window = "numeric", minP = "numeric",
@@ -47,10 +47,33 @@ critical for roxygen2 to differentiate the title from the
 description section.
 }
 \examples{
-data(gmap)
+# This example assumes you have a Tomahawk file called "1kgp3_chr6.twk" in
+# your current working directory.
 twk2<-new("twk")
 twk2@file.path <- "1kgp3_chr6.twk"
-plotLZ(twk2, "6:20694884", snp, gmap, window=1000000, minR2=0)
+
+# Data from
+# http://static.geneatlas.roslin.ed.ac.uk/gwas/allWhites/imputed/data.copy/imputed.allWhites.selfReported_n_1245.chr6.csv.gz
+# http://static.geneatlas.roslin.ed.ac.uk/gwas/allWhites/snps/extended/snps.imputed.chr6.csv.gz
+# This example assumes that these two files have been downloaded to your
+# local Downloads directory.
+library(data.table)
+x<-fread("zcat ~/Downloads/imputed.allWhites.selfReported_n_1245.chr6.csv.gz", sep=" ")
+snp<-fread("zcat ~/Downloads/snps.imputed.chr6.csv.gz", sep=" ")
+snp<-snp[match(x$SNP,snp$SNP),]
+# Transform raw P-values into negative log10-scaled space.
+snp$p <- -log10(x$`PV-selfReported_n_1245`)
+
+# Load recombination data for human hg19.
+data(gmap)
+z <- plotLZ(twk2, "6:20694884", snp, gmap, window = 1000000, minR2 = 0)
+z
+# Example using GenomicRanges class.
+require(GenomicRanges)
+g <- GRanges("6", IRanges(20694884, 20694884))
+z <- plotLZ(twk2, g, snp, gmap, window = 1000000, minR2 = 0)
+# With verbose output.
+z <- plotLZ(twk2, g, snp, gmap, window = 1000000, minR2 = 0, verbose=TRUE)
 }
 \seealso{
 \code{\link{twk_data}}, \code{\link{twk_header}}, 

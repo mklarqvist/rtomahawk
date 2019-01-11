@@ -1,4 +1,9 @@
-library(GenomicRanges)
+# Todo:
+# view(twk, filters, really = FALSE)
+# plot(twk, interval, really = FALSE)
+suppressPackageStartupMessages({
+    library(GenomicRanges)
+})
 
 #' Print Tomahawk version string
 #'
@@ -6,17 +11,9 @@ library(GenomicRanges)
 #' The extra blank line between this section and the title is
 #' critical for roxygen2 to differentiate the title from the
 #' description section.
-#'
-#' @param x Description of \code{x}. The main argument in this
-#'  example. Most often has such and such properties.
-#'
-#' @param y Description of \code{y}. An argument that is rarely
-#'  used by \code{"helloworld"} methods. 
-#'
-#' @param ... Additional argument list that might not ever
-#'  be used.
-#'
-#' @return Prints the C/C++ shared object versions used by Tomahawk.
+
+#' @return Prints the used version of rtomahawk and the C/C++ 
+#'    shared object versions used by Tomahawk.
 #' 
 #' @export
 #' @examples
@@ -25,7 +22,13 @@ setGeneric("tomahawkVersion", function(x="ANY",...) standardGeneric("tomahawkVer
 setMethod("tomahawkVersion",
     signature(x="ANY"),
     definition = function(x,...){
-        return(rtomahawk:::.twk_version())
+        cat(
+            sprintf("rtomahawk: %s\n%s\n", 
+                as.character(packageVersion("rtomahawk")), 
+                rtomahawk:::.twk_version()
+            ), 
+        sep="")
+        invisible(NULL)
     }
 )
 
@@ -95,7 +98,8 @@ twk_header <- setClass("twk_header",
 #' critical for roxygen2 to differentiate the title from the
 #' description section.
 #'
-#' @slot flag Text
+#' @slot flagInclude Text
+#' @slot flagExclude Text
 #' @slot D Text
 #' @slot Dprime Text
 #' @slot R Text
@@ -109,14 +113,68 @@ twk_header <- setClass("twk_header",
 #' 
 #' @export
 twk_filter <- setClass("twk_filter",
-    slots = c(flag = "vector",
-              D = "vector",
-              Dprime = "vector",
-              R = "vector",
-              R2 = "vector",
-              P = "vector",
-              ChiSqFisher = "vector",
-              ChiSqModel = "vector"))
+    slots = c(flagInclude = "numeric",
+              flagExclude = "numeric",
+              minD = "numeric",
+              maxD = "numeric",
+              minDprime = "numeric",
+              maxDprime = "numeric",
+              minR = "numeric",
+              maxR = "numeric",
+              minR2 = "numeric",
+              maxR2 = "numeric",
+              minP = "numeric",
+              maxP = "numeric",
+              minP1 = "numeric",
+              maxP1 = "numeric",
+              minP2 = "numeric",
+              maxP2 = "numeric",
+              minQ1 = "numeric",
+              maxQ1 = "numeric",
+              minQ2 = "numeric",
+              maxQ2 = "numeric",
+              minChiSqFisher = "numeric",
+              maxChiSqFisher = "numeric",
+              minChiSqModel = "numeric",
+              maxChiSqModel = "numeric",
+              upperOnly = "boolean",
+              lowerOnly = "boolean"))
+
+
+setGeneric("setFilters", 
+    function(x="twk_filter", 
+             flagInclude = "numeric",
+             flagExclude = "numeric",
+             minD = "numeric",
+             maxD = "numeric",
+             minDprime = "numeric",
+             maxDprime = "numeric",
+             minR = "numeric",
+             maxR = "numeric",
+             minR2 = "numeric",
+             maxR2 = "numeric",
+             minP = "numeric",
+             maxP = "numeric",
+             minP1 = "numeric",
+             maxP1 = "numeric",
+             minP2 = "numeric",
+             maxP2 = "numeric",
+             minQ1 = "numeric",
+             maxQ1 = "numeric",
+             minQ2 = "numeric",
+             maxQ2 = "numeric",
+             minChiSqFisher = "numeric",
+             maxChiSqFisher = "numeric",
+             minChiSqModel = "numeric",
+             maxChiSqModel = "numeric",
+             upperOnly = "boolean",
+             lowerOnly = "boolean",
+             ...)
+    { 
+        standardGeneric("setFilters")
+    }
+)
+# Todo: write actual set filters class
 
 #' Tomahawk output class
 #'
@@ -156,7 +214,7 @@ setMethod("show",
         cat("An object of class ", class(object), "\n", sep = "")
         if(object@state == 1) cat("State: sorted", "\n", sep="")
         else cat("State: unsorted", "\n", sep="")
-        cat("Number of blocks ", nrow(object@records),"\nrecords ", sum(as.numeric(object@records$n)), " \nUncompressed ", sum(as.numeric(object@records$b_unc)), "\nCompressed ", sum(as.numeric(object@records$b_cmp)), "\n", sep = "")
+        cat("Number of blocks ", nrow(object@records),"\nrecords ", sum(as.numeric(object@records$n)), " \nUncompressed ", sum(as.numeric(object@records$b_unc)), "b\nCompressed ", sum(as.numeric(object@records$b_cmp)), "b\n", sep = "")
         invisible(NULL)
     }
 )
@@ -197,25 +255,27 @@ setMethod("show",
     }
 )
 
+setGeneric("head", function(x="twk", ...){ standardGeneric("head") })
 setMethod("head",
     signature(x="twk"),
-    definition = function(x, n = 50, ...){
+    definition = function(x, n = 10, ...){
         args1 <- list(n = n)
         inargs <- list(...)
         args1[names(inargs)] <- inargs
         if(args1$n <= 0) return(NULL)
-        return(twk_head(x, args1$n));
+        return(rtomahawk:::.twk_head(x, args1$n));
     }
 )
 
+setGeneric("tail", function(x="twk", ...){ standardGeneric("tail") })
 setMethod("tail",
     signature(x="twk"),
-    definition = function(x, n = 50, ...){
+    definition = function(x, n = 10, ...){
         args1 <- list(n = n)
         inargs <- list(...)
         args1[names(inargs)] <- inargs
         if(args1$n <= 0) return(NULL)
-        return(twk_tail(x, args1$n));
+        return(rtomahawk:::.twk_tail(x, args1$n));
     }
 )
 
@@ -240,6 +300,24 @@ setMethod("[<-",
     }
 )
 
+# Basic ---------------------------
+
+setGeneric("OpenTomahawkOutput", function(input="character", ...){ standardGeneric("OpenTomahawkOutput") })
+setMethod("OpenTomahawkOutput",
+    signature(input="character"),
+    definition = function(input, ...){
+        if(nchar(input) == 0) stop("no input provided")
+        
+        args1 <- list(input = input)
+        inargs <- list(...)
+        args1[names(inargs)] <- inargs
+
+        return(rtomahawk:::.OpenTomahawkOutput(input));
+    }
+)
+
+# Decay ---------------------------
+
 setGeneric("decay", function(x="twk", range = "numeric", nbins = "numeric", ...){ standardGeneric("decay") })
 
 setMethod("decay",
@@ -255,7 +333,7 @@ setMethod("decay",
     }
 )
 
-#' Plotting and computing target LD
+#' Plot Locuszoom-like graph for a location its GWAS P-value and LD association
 #'
 #' Some additional details about this S4 generic and its methods.
 #' The extra blank line between this section and the title is
@@ -289,27 +367,75 @@ setMethod("decay",
 #' 
 #' @export
 #' @examples
-#' data(gmap)
+#' # This example assumes you have a Tomahawk file called "1kgp3_chr6.twk" in
+#' # your current working directory.
 #' twk2<-new("twk")
 #' twk2@file.path <- "1kgp3_chr6.twk"
-#' plotLZ(twk2, "6:20694884", snp, gmap, window=1000000, minR2=0)
-setGeneric("plotLZ", function(x="twk", interval="ANY", snp="data.frame", gmap="list", window="numeric", minP="numeric", minR2="numeric", threads="numeric", verbose="numeric", ...){ standardGeneric("plotLZ") })
+#' 
+#' # Data from
+#' # http://static.geneatlas.roslin.ed.ac.uk/gwas/allWhites/imputed/data.copy/imputed.allWhites.selfReported_n_1245.chr6.csv.gz
+#' # http://static.geneatlas.roslin.ed.ac.uk/gwas/allWhites/snps/extended/snps.imputed.chr6.csv.gz
+#' # This example assumes that these two files have been downloaded to your
+#' # local Downloads directory.
+#' library(data.table)
+#' x<-fread("zcat ~/Downloads/imputed.allWhites.selfReported_n_1245.chr6.csv.gz", sep=" ")
+#' snp<-fread("zcat ~/Downloads/snps.imputed.chr6.csv.gz", sep=" ")
+#' snp<-snp[match(x$SNP,snp$SNP),]
+#' # Transform raw P-values into negative log10-scaled space.
+#' snp$p <- -log10(x$`PV-selfReported_n_1245`)
+#'
+#' # Load recombination data for human hg19.
+#' data(gmap)
+#' z <- plotLZ(twk2, "6:20694884", snp, gmap, window = 1000000, minR2 = 0)
+#' z
+#' # Example using GenomicRanges class.
+#' require(GenomicRanges)
+#' g <- GRanges("6", IRanges(20694884, 20694884))
+#' z <- plotLZ(twk2, g, snp, gmap, window = 1000000, minR2 = 0)
+#' # With verbose output.
+#' z <- plotLZ(twk2, g, snp, gmap, window = 1000000, minR2 = 0, verbose=TRUE)
+setGeneric("plotLZ", 
+    function(x="twk", 
+             interval="ANY", 
+             snp="data.frame", 
+             gmap="list", 
+             window="numeric", 
+             minP="numeric", 
+             minR2="numeric", 
+             threads="numeric", 
+             verbose="numeric", 
+             ...)
+    { 
+        standardGeneric("plotLZ") 
+    }
+)
 
 setMethod("plotLZ",
     signature(interval="character"),
     definition = function(x, interval, snp, gmap, window = 500000, minP = 1, minR2 = 0.01, threads = 1, verbose = FALSE, ...){
         if(nrow(snp) == 0) stop("no input snp data")
         if(length(gmap) == 0) stop("no input gmap data")
+        if(nchar(args1$interval) == 0) stop("no interval provided")
 
         args1 <- list(x = x, interval = interval, window = window, snp = snp, gmap = gmap, minP = minP, minR2 = minR2, threads = threads, verbose = verbose, progress = FALSE)
         inargs <- list(...)
         args1[names(inargs)] <- inargs
 
-        tgt_snp <- strsplit(args1$interval, ":")[[1]]
-        if( length(tgt_snp) != 2){
-            stop("illegal interval formatting")
+        interval_type <- rtomahawk:::.checkInterval(args1$interval)
+        if(interval_type == 2){
+            # good
+            tgt_chr <- as.numeric(strsplit(args1$interval, ":")[[1]][1])
+            tgt_snp <- as.numeric(strsplit(args1$interval, ":")[[1]][2])
+        } else if(interval_type == 3){
+            pos_temp <- strsplit(strsplit(args1$interval,":")[[1]][2],"-")[[1]]
+            if(pos_temp[1] != pos_temp[2])
+                stop("illegal interval. interval may only encompass a single position")
+            tgt_chr <- as.numeric(strsplit(args1$interval, ":")[[1]][1])
+            tgt_snp <- as.numeric(pos_temp[1])
+        } else {
+            stop("illegal interval")
         }
-        tgt_chr <- tgt_snp[1]
+        
         if(grep("^[0-9]$",tgt_chr)) tgt_chr <- paste("chr", tgt_chr, sep = "", collapse = NULL)
         else {
             tgt_chr <- strtolower(tgt_chr)
@@ -317,8 +443,6 @@ setMethod("plotLZ",
 
         if(!tgt_chr %in% names(gmap))
             stop("cannot find target chromosome in gmap")
-
-        tgt_snp <- as.numeric(tgt_snp[2])
 
         if(!tgt_snp%in%snp$Position){
             stop("cannot find target snp in set")
@@ -422,8 +546,35 @@ setMethod("plotLZ",
     }
 )
 
-## Aggregation
-# Aggregation object.
+#' Tomahawk output aggregation class
+#'
+#' Some additional details about this S4 generic and its methods.
+#' The extra blank line between this section and the title is
+#' critical for roxygen2 to differentiate the title from the
+#' description section.
+#'
+#' @slot twk Instance of a \code{\link{twk}} object. This is the 
+#'    computed information that is returned from the underlying 
+#'    \code{.Call} to Tomahawk. Note that no data is stored in
+#'    this object in this case.
+#' @slot n Total number of data points in the reduced output matrix.
+#' @slot x Number of bins in the X dimension.
+#' @slot y Number of bins in the Y dimension.
+#' @slot bpx Base-pairs encompassed in each x-bin.
+#' @slot bpy Base-pairs encompassed in each y-bin.
+#' @slot aggregation The function string name used for aggregation.
+#' @slot reduction The function string name used for reduction.
+#' @slot n_original Total number of original data points prior to
+#'    aggregation.
+#' @slot range Total number of base-pairs encompassed by the aggregator.
+#' @slot offsets Data frame representing the cumulative number of base-pairs
+#'    used by each chromosome in the file.
+#' @slot data Output aggregated matrix of size [x, y] such that x*y = n.
+#' 
+#' @seealso \code{\link{twk_index}}, \code{\link{twk_header}}, 
+#' \code{\link{twk_filter}}, and \code{\link{twk}}
+#' 
+#' @export
 twk_agg <- setClass("twk_agg",
     slots = c(twk = "twk",
               n = "numeric",
@@ -436,8 +587,7 @@ twk_agg <- setClass("twk_agg",
               n_original = "numeric",
               range = "numeric",
               offsets = "data.frame",
-              data = "matrix",
-              quantiles = "numeric"))
+              data = "matrix"))
 
 # Show method
 setMethod("show",
@@ -450,6 +600,41 @@ setMethod("show",
     }
 )
 
+#' Aggregate billions of data points into a reduced-representation matrix
+#'
+#' Some additional details about this S4 generic and its methods.
+#' The extra blank line between this section and the title is
+#' critical for roxygen2 to differentiate the title from the
+#' description section.
+#'
+#' @param x Input \code{\link{twk}} class holding the target path.
+#' @param aggregation String representing the aggregation function to use
+#'    on the input data.
+#' @param reduction String representing the reduction function to use after
+#'    after data has been aggregated.
+#' @param xbins Number of bins (pixels) in the x-dimension.
+#' @param ybins Number of bins (pixels) in the y-dimension.
+#' @param minCount Only pixels with at least this many observations are reported.
+#' @param threads Number of aggregation/reduction threads to use.
+#' @param verbose Flag triggering verbose output (written to std::cerr). This
+#'    will usually, but not always, be appropriately handled by R.
+#' @param progress This flag will trigger a detached thread internal to Tomahawk
+#'    that will tick progression every 30 seconds to the console. Note that R
+#'    NEVER cleans up this thread and it will tick until the R instance is closed.
+#' 
+#' @return Returns a \code{\link{twk_agg}} object with the aggregated matrix.
+#'
+#' @seealso \code{\link{twk_data}}, \code{\link{twk_header}}, 
+#' \code{\link{twk_filter}}, and \code{\link{twk}}
+#' 
+#' @export
+#' @examples
+#' # Assuming you have a file called "test.two" in your downloads directory.
+#' twk<-OpenTomahawkOutput("~/Downloads/test.two")
+#' agg <- aggregateOutput(twk, "r2" ,"count", 1000, 1000, 50, verbose = T, threads = 4)
+#' plot(agg, normalized = TRUE)
+#' plot(agg, normalized = FALSE)
+#' agg
 setGeneric("aggregate", 
     function(x="twk", 
              aggregation = "character", 
@@ -497,9 +682,8 @@ setMethod("aggregate",
     }
 )
 
-setGeneric("plot", function(x="twk_agg", y="ANY", ...) standardGeneric("plot"))
-
 # General plotting method for aggregation.
+setGeneric("plot", function(x="twk_agg", y="ANY", ...) standardGeneric("plot"))
 setMethod("plot",
     signature(x="twk_agg", y="ANY"),
     definition = function(x, normalize = TRUE, ...){
@@ -537,14 +721,51 @@ setMethod("plot",
     }
 )
 
-# single LD
+#' Calculate pairwise LD for a target SNV to its neighbourhood
+#'
+#' Some additional details about this S4 generic and its methods.
+#' The extra blank line between this section and the title is
+#' critical for roxygen2 to differentiate the title from the
+#' description section.
+#'
+#' @param x Integer representing the sorted state of the file.
+#' @param interval This parameter can be either a character string 
+#'    encoded as "CHR:POS" or a GenomicRanges object overlapping a 
+#'    single position.  
+#' @param window Neighbourhood in base-pairs.
+#' @param minP Largest P-value to report.
+#' @param minR2 Smallest R-squared (R2) value to report.
+#' @param threads Number of Tomahawk threads used to unpack and compute the
+#'    association data.
+#' @param verbose Flag triggering verbose output (written to std::cerr). This
+#'    will usually, but not always, be appropriately handled by R.
+#' @param progress This flag will trigger a detached thread internal to Tomahawk
+#'    that will tick progression every 30 seconds to the console. Note that R
+#'    NEVER cleans up this thread and it will tick until the R instance is closed.
+#' 
+#' @return Returns a \code{\link{twk}} object with the loaded data.
+#'
+#' @seealso \code{\link{twk_data}}, \code{\link{twk_header}}, 
+#' \code{\link{twk_filter}}, and \code{\link{twk}}
+#' 
+#' @export
+#' @examples
+#' # This example assumes you have a Tomahawk file called "1kgp3_chr6.twk" in
+#' # your current working directory.
+#' twk2<-new("twk")
+#' twk2@file.path <- "1kgp3_chr6.twk"
+#' y<-calculateLDSingle(twk2, "6:20682622", threads = 4, window = 100000)
+#' # Example using GenomicRanges class.
+#' require(GenomicRanges)
+#' g <- GRanges("6", IRanges(20682622, 20682622))
+#' y<-calculateLDSingle(twk2, g, threads = 4, window = 100000)
 setGeneric("calculateLDSingle", 
     function(x="twk", 
              interval = "ANY", 
              window = "numeric", 
              minP = "numeric", 
              minR2 = "numeric", 
-             n_threads = "numeric", 
+             threads = "numeric", 
              verbose = "boolean", 
              progress = "boolean", ...)
     { 
@@ -554,13 +775,13 @@ setGeneric("calculateLDSingle",
 
 setMethod("calculateLDSingle",
     signature(interval="character"),
-    definition = function(x, interval, window = 500000, minP = 1, minR2 = 0, n_threads = 1, verbose = FALSE, progress = FALSE, ...){
+    definition = function(x, interval, window = 500000, minP = 1, minR2 = 0, threads = 1, verbose = FALSE, progress = FALSE, ...){
         args1 <- list(x = x, 
                       interval = interval, 
                       window = window, 
                       minP = minP, 
                       minR2 = minR2, 
-                      n_threads = n_threads, 
+                      threads = threads, 
                       verbose = verbose, 
                       progress = progress)
 
@@ -570,14 +791,25 @@ setMethod("calculateLDSingle",
         if(args1$window < 1) stop("window < 1")
         if(args1$minP < 0 | args1$minP > 1) stop("minP < 0 or minP > 1")
         if(args1$minR2 < 0 | args1$minR2 > 1) stop("minR2 < 0 or minR2 > 1")
-        if(args1$n_threads <= 0) stop("n_threads <= 0")
+        if(args1$threads <= 0) stop("threads <= 0")
+
+        interval_type <- rtomahawk:::.checkInterval(args1$interval)
+        if(interval_type == 2){
+            # good
+        } else if(interval_type == 3){
+            pos_temp <- strsplit(strsplit(args1$interval,":")[[1]][2],"-")[[1]]
+            if(pos_temp[1] != pos_temp[2])
+                stop("illegal interval. interval may only encompass a single position")
+        } else {
+            stop("illegal interval")
+        }
 
         return(rtomahawk:::.twk_scalc(x, 
                                       args1$interval, 
                                       args1$window, 
                                       args1$minP, 
                                       args1$minR2,  
-                                      args1$n_threads, 
+                                      args1$threads, 
                                       args1$verbose, 
                                       args1$progress));
     }
@@ -592,7 +824,7 @@ setMethod("calculateLDSingle",
         if(interval@ranges@width != 1)
             stop("Interval length is not 1!")
 
-        interval_string <- sprintf("%s:%s",interval@seqnames@values,interval@ranges@start)
+        interval_string <- sprintf("%s:%s", interval@seqnames@values, interval@ranges@start)
 
         args1 <- list(x = x, 
                       interval = interval_string, 

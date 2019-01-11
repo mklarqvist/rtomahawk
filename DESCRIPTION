@@ -1,7 +1,7 @@
 Package: rtomahawk
 Type: Package
 Title: Tools for computing, querying and storing linkage-disequilibrium data
-Version: 1.0
+Version: 0.1.0
 Date: 2018-12-17
 Author: Marcus D. R. Klarqvist
 Maintainer: Marcus D. R. Klarqvist <mk819@cam.ac.uk>
@@ -9,6 +9,7 @@ Description: Tomahawk is a unified framework for computing, storing, querying, a
 License: MIT
 URL: https://github.com/mklarqvist/tomahawk
 BugReports: https://github.com/mklarqvist/tomahawk/issues
+biocViews: Software
 Imports: 
 	Rcpp (>= 1.0.0),
 	GenomicRanges

@@ -14,7 +14,9 @@ description section.
 \section{Slots}{
 
 \describe{
-\item{\code{flag}}{Text}
+\item{\code{flagInclude}}{Text}
+
+\item{\code{flagExclude}}{Text}
 
 \item{\code{D}}{Text}
 

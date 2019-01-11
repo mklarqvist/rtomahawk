@@ -5,6 +5,50 @@
 
 using namespace Rcpp;
 
+// CheckIntervalContig
+bool CheckIntervalContig(const std::string& interval);
+RcppExport SEXP _rtomahawk_CheckIntervalContig(SEXP intervalSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type interval(intervalSEXP);
+    rcpp_result_gen = Rcpp::wrap(CheckIntervalContig(interval));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CheckIntervalContigPosition
+bool CheckIntervalContigPosition(const std::string& interval);
+RcppExport SEXP _rtomahawk_CheckIntervalContigPosition(SEXP intervalSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type interval(intervalSEXP);
+    rcpp_result_gen = Rcpp::wrap(CheckIntervalContigPosition(interval));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CheckIntervalContigRange
+bool CheckIntervalContigRange(const std::string& interval);
+RcppExport SEXP _rtomahawk_CheckIntervalContigRange(SEXP intervalSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type interval(intervalSEXP);
+    rcpp_result_gen = Rcpp::wrap(CheckIntervalContigRange(interval));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CheckInterval
+int CheckInterval(const std::string& interval);
+RcppExport SEXP _rtomahawk_CheckInterval(SEXP intervalSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type interval(intervalSEXP);
+    rcpp_result_gen = Rcpp::wrap(CheckInterval(interval));
+    return rcpp_result_gen;
+END_RCPP
+}
 // twk_version
 std::string twk_version();
 RcppExport SEXP _rtomahawk_twk_version() {
@@ -113,6 +157,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_rtomahawk_CheckIntervalContig", (DL_FUNC) &_rtomahawk_CheckIntervalContig, 1},
+    {"_rtomahawk_CheckIntervalContigPosition", (DL_FUNC) &_rtomahawk_CheckIntervalContigPosition, 1},
+    {"_rtomahawk_CheckIntervalContigRange", (DL_FUNC) &_rtomahawk_CheckIntervalContigRange, 1},
+    {"_rtomahawk_CheckInterval", (DL_FUNC) &_rtomahawk_CheckInterval, 1},
     {"_rtomahawk_twk_version", (DL_FUNC) &_rtomahawk_twk_version, 0},
     {"_rtomahawk_twk_head", (DL_FUNC) &_rtomahawk_twk_head, 2},
     {"_rtomahawk_twk_tail", (DL_FUNC) &_rtomahawk_twk_tail, 2},

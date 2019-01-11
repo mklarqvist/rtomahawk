@@ -6,18 +6,9 @@
 \usage{
 tomahawkVersion(x = "ANY", ...)
 }
-\arguments{
-\item{x}{Description of \code{x}. The main argument in this
-example. Most often has such and such properties.}
-
-\item{...}{Additional argument list that might not ever
-be used.}
-
-\item{y}{Description of \code{y}. An argument that is rarely
-used by \code{"helloworld"} methods.}
-}
 \value{
-Prints the C/C++ shared object versions used by Tomahawk.
+Prints the used version of rtomahawk and the C/C++ 
+   shared object versions used by Tomahawk.
 }
 \description{
 Some additional details about this S4 generic and its methods.
