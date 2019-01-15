@@ -798,6 +798,75 @@ setMethod("plotLDTriangular",
     }
 )
 
+addGenomicAxis <- function(limit, at=1, las1 = 1){
+    if(class(limit) != "numeric") stop("limit must be numeric")
+    if(length(limit) != 2) stop("limit must be of size 2")
+    
+    if(abs(limit[2] - limit[1]) < 1e3){ 
+        #print("in < 1e3")
+        tick_pos <- seq(round(min(limit),-2),round(max(limit),-2), by = 1e2)
+        print(tick_pos)
+        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
+        else tick_labels <- paste0(tick_pos/1e3,"Kb")
+        axis(at, at=tick_pos, labels=tick_labels, las = las1)
+        
+        tick_pos_add <- seq(round(min(limit),-2),round(max(limit),-2), by = 10)
+        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
+        rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey")
+    }
+    else if(abs(limit[2] - limit[1]) < 10e3){ 
+        #print("in < 10e3")
+        tick_pos <- seq(round(min(limit),-3),round(max(limit),-3), by = 1e3)
+        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
+        else tick_labels <- paste0(tick_pos/1e3,"Kb")
+        axis(at, at=tick_pos, labels=tick_labels, las = las1)
+        
+        tick_pos_add <- seq(round(min(limit),-3),round(max(limit),-3), by = 100)
+        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
+        rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey")
+    }
+    else if(abs(limit[2] - limit[1]) < 100e3){ 
+        #print("in < 100e3")
+        tick_pos <- seq(round(min(limit),-4),round(max(limit),-4), by = 10e3)
+        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
+        else tick_labels <- paste0(tick_pos/1e3,"Kb")
+        axis(at, at=tick_pos, labels=tick_labels, las = las1)
+        tick_pos_add <- seq(round(min(limit),-4),round(max(limit),-4), by = 1e3)
+        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
+        rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey")
+    }
+    else if(abs(limit[2] - limit[1]) < 1e6){ 
+        #print("in < 1e6")
+        tick_pos <- seq(round(min(limit),-5),round(max(limit),-5), by = 100e3)
+        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
+        else tick_labels <- paste0(tick_pos/1e3,"Kb")
+        axis(at, at=tick_pos, labels=tick_labels, las = las1)
+        tick_pos_add <- seq(round(min(limit),-5),round(max(limit),-5), by = 10e3)
+        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
+        rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey")
+    }
+    else if(abs(limit[2] - limit[1]) < 10e6){ 
+        print("in < 10e6")
+        tick_pos <- seq(round(min(limit),-6),round(max(limit),-6), by = 1e6)
+        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
+        else tick_labels <- paste0(tick_pos/1e3,"Kb")
+        axis(at, at=tick_pos, labels=tick_labels, las = las1)
+        tick_pos_add <- seq(round(min(limit),-6),round(max(limit),-6), by = 100e3)
+        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
+        rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey")
+    }
+    else if(abs(limit[2] - limit[1]) < 100e6){ 
+        #print("in < 10e6")
+        tick_pos <- seq(round(min(limit),-7),round(max(limit),-7), by = 10e6)
+        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
+        else tick_labels <- paste0(tick_pos/1e3,"Kb")
+        axis(at, at=tick_pos, labels=tick_labels, las = las1)
+        tick_pos_add <- seq(round(min(limit),-7),round(max(limit),-7), by = 1e6)
+        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
+        rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey")
+    }
+}
+
 #' Plot LD square
 #'
 #' Some additional details about this S4 generic and its methods.
@@ -892,7 +961,7 @@ setMethod("plotLD",
         }
 
         # Arguments
-        args1 <- list(col = alpha_cols, xlab = "Position", ylab = "Position", pch = 16, cex = .2, xaxs = "i", yaxs = "i", las = 2)
+        args1 <- list(col = alpha_cols, pch = 20, cex = .2, xaxs = "i", yaxs = "i", las = 2, xaxt = "n", yaxt = "n", axes = FALSE, ylab = "", xlab = "")
         inargs <- list(...)
         args1[names(inargs)] <- inargs
 
@@ -918,12 +987,12 @@ setMethod("plotLD",
                          & x@data@data$posA <= to 
                          & x@data@data$posB >= from 
                          & x@data@data$posB <= to, c("posA","posB","R2")]
+        
+        if(nrow(b) == 0) stop("no data after filter")
         b <- b[order(b$R2,decreasing = F),] # sort for Z-stack
-
         if(upper) b <- b[b$posA < b$posB,]
         if(lower) b <- b[b$posB < b$posA,]
-
-        if(nrow(b) == 0) stop("no data after filter")
+        
         xd <- b$posA
         yd <- b$posB
         args1$col <- args1$col[cut(b$R2,breaks=seq(0, 1, length.out = (length(alpha_cols)-1)), include.lowest = T)]
@@ -941,7 +1010,13 @@ setMethod("plotLD",
         # Add background.
         if(!is.null(bg)) rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = bg)
         # Add points.
+        args1[["axes"]]<-NULL
         do.call("points", c(yd~xd, args1))
+
+        # Add axis
+        # Todo: will produce incorrect order if xaxis is flipped (descending order)
+        addGenomicAxis(args1$xlim, 1, 1)
+        addGenomicAxis(args1$ylim, 2, 2)
     }
 )
 
