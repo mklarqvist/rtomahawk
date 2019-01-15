@@ -33,6 +33,14 @@
     .Call(`_rtomahawk_OpenTomahawkOutput`, input)
 }
 
+.ReadRecordsIntervals <- function(twk, filters, intervals, really = FALSE) {
+    .Call(`_rtomahawk_ReadRecordsIntervals`, twk, filters, intervals, really)
+}
+
+.ReadRecords <- function(twk, filters, really = FALSE) {
+    .Call(`_rtomahawk_ReadRecords`, twk, filters, really)
+}
+
 .twk_decay <- function(obj, range, n_bins) {
     .Call(`_rtomahawk_twk_decay`, obj, range, n_bins)
 }

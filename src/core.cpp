@@ -38,7 +38,10 @@ int CheckInterval(const std::string& interval){
  *        stores as required by R data.frame structures.
  */
 struct twk_two_transpose_t {
-    twk_two_transpose_t(uint32_t n) : include_flag(~(uint16_t)0)
+    twk_two_transpose_t() : include_flag(~(uint16_t)0), n(0)
+    {}
+
+    twk_two_transpose_t(uint32_t n) : include_flag(~(uint16_t)0), n(0)
     {
         // Todo: fix reserves when not all FLAGs are set.
         for(int i = 0; i < 3;  ++i) cols[i].reserve(n);
@@ -54,6 +57,8 @@ struct twk_two_transpose_t {
      * @param oreader Reference twk_reader used for extracting contig names from the header.
      */
     void Add(const tomahawk::twk1_two_t& rec, const tomahawk::two_reader& oreader){
+        ++n;
+
         // Integer
         cols[0].push_back(rec.controller);
         cols[1].push_back(rec.Apos + 1); // 1-base output.
@@ -102,6 +107,7 @@ struct twk_two_transpose_t {
 
 public:
     uint16_t include_flag;
+    uint64_t n;
     std::vector<uint32_t>    cols[3];
     std::vector<std::string> scols[2];
     std::vector<double>      dcols[11];
@@ -315,6 +321,265 @@ Rcpp::S4 OpenTomahawkOutput(std::string input){
 
     // Start constructing the sample component.
     return(twk);
+}
+
+tomahawk::twk_two_settings ConvertS4ToSettings(const Rcpp::S4& filters){
+     if (! filters.inherits("twk_filter"))
+        Rcpp::stop("Input must be a twk_filter() model object.");
+
+    tomahawk::twk_two_settings settings;
+
+    // Set only the filtering parameters we are using. Setting all filters at
+    // with default values will still cause Tomahawk to iterate over every record
+    // and apply ALL filter functions.
+    if(Rcpp::as<double>(filters.slot("flagInclude")) != 4294967295)  settings.filter.SetFlagInclude(filters.slot("flagInclude"));
+    if(Rcpp::as<double>(filters.slot("flagExclude")) != 0)  settings.filter.SetFlagExclude(filters.slot("flagExclude"));
+
+    if(Rcpp::as<double>(filters.slot("minR")) != -999999999) settings.filter.SetRLow(filters.slot("minR"));
+    if(Rcpp::as<double>(filters.slot("maxR")) != 999999999) settings.filter.SetRHigh(filters.slot("maxR"));
+
+    if(Rcpp::as<double>(filters.slot("minR2")) != 0) settings.filter.SetR2Low(filters.slot("minR2"));
+    if(Rcpp::as<double>(filters.slot("maxR2")) != 999999999) settings.filter.SetR2High(filters.slot("maxR2"));
+
+    if(Rcpp::as<double>(filters.slot("minD")) != -999999999) settings.filter.SetDLow(filters.slot("minD"));
+    if(Rcpp::as<double>(filters.slot("maxD")) != 999999999) settings.filter.SetDHigh(filters.slot("maxD"));
+
+    if(Rcpp::as<double>(filters.slot("minDprime")) != 0) settings.filter.SetDprimeLow(filters.slot("minDprime"));
+    if(Rcpp::as<double>(filters.slot("maxDprime")) != 999999999) settings.filter.SetDprimeHigh(filters.slot("maxDprime"));
+
+    if(Rcpp::as<double>(filters.slot("minP")) != 0) settings.filter.SetPLow(filters.slot("minP"));
+    if(Rcpp::as<double>(filters.slot("maxP")) != 999999999) settings.filter.SetPHigh(filters.slot("maxP"));
+
+    if(Rcpp::as<double>(filters.slot("minP1")) != 0) settings.filter.SetHapALow(filters.slot("minP1"));
+    if(Rcpp::as<double>(filters.slot("maxP1")) != 999999999) settings.filter.SetHapALow(filters.slot("maxP1"));
+
+    if(Rcpp::as<double>(filters.slot("minP2")) != 0) settings.filter.SetHapBLow(filters.slot("minP2"));
+    if(Rcpp::as<double>(filters.slot("maxP2")) != 999999999) settings.filter.SetHapBLow(filters.slot("maxP2"));
+
+    if(Rcpp::as<double>(filters.slot("minQ1")) != 0) settings.filter.SetHapCLow(filters.slot("minQ1"));
+    if(Rcpp::as<double>(filters.slot("maxQ1")) != 999999999) settings.filter.SetHapCLow(filters.slot("maxQ1"));
+
+    if(Rcpp::as<double>(filters.slot("minQ2")) != 0) settings.filter.SetHapDLow(filters.slot("minQ2"));
+    if(Rcpp::as<double>(filters.slot("maxQ2")) != 999999999) settings.filter.SetHapDLow(filters.slot("maxQ2"));
+
+    if(Rcpp::as<double>(filters.slot("minChiSqFisher")) != 0) settings.filter.SetChiSqLow(filters.slot("minChiSqFisher"));
+    if(Rcpp::as<double>(filters.slot("maxChiSqFisher")) != 999999999) settings.filter.SetChiSqHigh(filters.slot("maxChiSqFisher"));
+
+    if(Rcpp::as<double>(filters.slot("minChiSqModel")) != 0) settings.filter.SetChiSqModelLow(filters.slot("minChiSqModel"));
+    if(Rcpp::as<double>(filters.slot("maxChiSqModel")) != 999999999) settings.filter.SetChiSqModelHigh(filters.slot("maxChiSqModel"));
+
+    if(Rcpp::as<bool>(filters.slot("upperOnly"))) settings.filter.SetUpperTrig();
+    if(Rcpp::as<bool>(filters.slot("lowerOnly"))) settings.filter.SetLowerTrig();
+
+    return(settings);
+}
+
+/**
+ * @brief Reads TWO records given the provided filters and intervals. By default
+ *        this function will stop after reading 10 million records into memory
+ *        to prevent inadvertently reading too much data and crashing R. If the
+ *        user intends to read >10M records in a go the flag `really` needs to be
+ *        set to TRUE.
+ * 
+ * @param twk 
+ * @param filters 
+ * @param intervals 
+ * @param really 
+ * @return Rcpp::S4 
+ */
+// [[Rcpp::export(name=".ReadRecordsIntervals")]]
+Rcpp::S4 ReadRecordsIntervals(const Rcpp::S4& twk, 
+                              const Rcpp::S4& filters, 
+                              const std::vector<std::string>& intervals, 
+                              bool really = false)
+{
+    if (! twk.inherits("twk"))
+        Rcpp::stop("Input must be a twk() model object.");
+
+    if (! filters.inherits("twk_filter"))
+        Rcpp::stop("Input must be a twk_filter() model object.");
+
+    // Retrieve file path from twk object. 
+    std::string input = Rcpp::as<std::string>(twk.slot("file.path"));
+    // Make use of R internal function path.expand() to expand out
+    // a relative path into an absolute path as required by the API.
+    Rcpp::Function f("path.expand");
+    std::string inreal = Rcpp::as<std::string>(f(input));
+
+    tomahawk::twk_two_settings settings = ConvertS4ToSettings(filters);
+    settings.ivals = intervals;
+    settings.in = inreal;
+
+    // Todo: overload settings using values from the S4 twk_filters class.
+
+    // New instance of reader.
+	tomahawk::two_reader oreader;
+
+	// Open file handle.
+	if(oreader.Open(settings.in) == false){
+		Rcpp::stop(tomahawk::utility::timestamp("ERROR") + "Failed to open: \"" + settings.in + "\"!");
+	}
+
+	// Build intervals data structures if any are available.
+	if(oreader.BuildIntervals(settings.ivals, oreader.hdr.GetNumberContigs(), oreader.index,oreader.hdr) == false)
+		Rcpp::stop(tomahawk::utility::timestamp("ERROR") + "Failed to build intervals!");
+
+    // Construct filters.
+	settings.filter.Build();
+
+    // Iff success then load new 'twk' object.
+    Rcpp::Language twk_type("new", "twk");
+    Rcpp::S4 otwk( twk_type.eval() ); //use Rcpp::Language to create and assign a twk_header S4 object.
+    Rcpp::Language hdr("new", "twk_header");
+    Rcpp::S4 header( hdr.eval() );
+    Rcpp::Language idx("new", "twk_index");
+    Rcpp::S4 index( idx.eval() );
+    Rcpp::Language datac("new", "twk_data");
+    Rcpp::S4 data( datac.eval() );
+
+    // Start constructing contig component.
+    LoadContigs(oreader, header);
+    LoadSamples(oreader, header);
+    LoadIndex(oreader, index);
+    LoadHeaderLiterals(oreader, header);
+
+    otwk.slot("index") = index;
+    otwk.slot("header") = header;
+    otwk.slot("file.path") = settings.out;
+    
+    twk_two_transpose_t recs;
+    uint64_t limit = 10000000;
+    if(really) limit = 10000000000000000;
+
+    if(oreader.index.state == TWK_IDX_SORTED && settings.ivals.size()){
+		const std::vector<tomahawk::IndexEntryOutput*>& irecs = oreader.GetIntervalBlocks();
+		for(int i = 0; i < irecs.size(); ++i){
+			oreader.stream->seekg(irecs[i]->foff);
+			if(oreader.NextBlock() == false){
+				Rcpp::stop(tomahawk::utility::timestamp("ERROR") + "Failed to get next block!");
+			}
+
+			for(int j = 0; j < oreader.it.blk.n; ++j){
+				assert(oreader.NextRecord());
+				if(oreader.FilterInterval(oreader.it.rcd)){
+					continue;
+				}
+
+				if(settings.filter.Filter(oreader.it.rcd)){
+                    if(recs.n == limit){
+                        Rcpp::Rcerr << "limit reached" << std::endl;
+                        goto limit_reached;
+                    }
+                    recs.Add(*oreader.it.rcd, oreader);
+					//writer.Add(*oreader.it.rcd);
+				}
+			}
+		}
+	} else if(settings.ivals.size()){
+		while(oreader.NextRecord()){
+			if(oreader.FilterInterval(oreader.it.rcd)){
+				continue;
+			}
+
+			if(settings.filter.Filter(oreader.it.rcd)){
+                if(recs.n == limit){
+                    Rcpp::Rcerr << "limit reached" << std::endl;
+                    goto limit_reached;
+                }
+                recs.Add(*oreader.it.rcd, oreader);
+				//writer.Add(*oreader.it.rcd);
+			}
+		}
+	} else {
+		while(oreader.NextRecord()){
+			if(settings.filter.Filter(oreader.it.rcd)){
+                if(recs.n == limit){
+                    Rcpp::Rcerr << "limit reached" << std::endl;
+                    goto limit_reached;
+                }
+                recs.Add(*oreader.it.rcd, oreader);
+				//writer.Add(*oreader.it.rcd);
+			}
+		}
+	}
+
+    limit_reached:
+    data.slot("data") = recs.GetDataFrame();
+    otwk.slot("data") = data;
+    return(otwk);
+}
+
+// [[Rcpp::export(name=".ReadRecords")]]
+Rcpp::S4 ReadRecords(const Rcpp::S4& twk, 
+                     const Rcpp::S4& filters,
+                     bool really = false)
+{
+    if (! twk.inherits("twk"))
+        Rcpp::stop("Input must be a twk() model object.");
+
+    if (! filters.inherits("twk_filter"))
+        Rcpp::stop("Input must be a twk_filter() model object.");
+
+    // Retrieve file path from twk object. 
+    std::string input = Rcpp::as<std::string>(twk.slot("file.path"));
+    // Make use of R internal function path.expand() to expand out
+    // a relative path into an absolute path as required by the API.
+    Rcpp::Function f("path.expand");
+    std::string inreal = Rcpp::as<std::string>(f(input));
+
+     tomahawk::twk_two_settings settings = ConvertS4ToSettings(filters);
+    settings.in = inreal;
+
+    // New instance of reader.
+	tomahawk::two_reader oreader;
+
+	// Open file handle.
+	if(oreader.Open(inreal) == false){
+		Rcpp::stop(tomahawk::utility::timestamp("ERROR") + "Failed to open: \"" + inreal + "\"!");
+	}
+
+    // Construct filters.
+	settings.filter.Build();
+
+    // Iff success then load new 'twk' object.
+    Rcpp::Language twk_type("new", "twk");
+    Rcpp::S4 otwk( twk_type.eval() ); //use Rcpp::Language to create and assign a twk_header S4 object.
+    Rcpp::Language hdr("new", "twk_header");
+    Rcpp::S4 header( hdr.eval() );
+    Rcpp::Language idx("new", "twk_index");
+    Rcpp::S4 index( idx.eval() );
+    Rcpp::Language datac("new", "twk_data");
+    Rcpp::S4 data( datac.eval() );
+
+    // Start constructing contig component.
+    LoadContigs(oreader, header);
+    LoadSamples(oreader, header);
+    LoadIndex(oreader, index);
+    LoadHeaderLiterals(oreader, header);
+
+    otwk.slot("index") = index;
+    otwk.slot("header") = header;
+    otwk.slot("file.path") = settings.out;
+    
+    twk_two_transpose_t recs;
+    uint64_t limit = 10000000;
+    if(really) limit = 10000000000000000;
+
+    while(oreader.NextRecord()){
+        if(settings.filter.Filter(oreader.it.rcd)){
+            if(recs.n == limit){
+                Rcpp::Rcerr << "limit reached" << std::endl;
+                goto limit_reached;
+            }
+            recs.Add(*oreader.it.rcd, oreader);
+            //writer.Add(*oreader.it.rcd);
+        }
+    }
+
+    limit_reached:
+    data.slot("data") = recs.GetDataFrame();
+    otwk.slot("data") = data;
+    return(otwk);
 }
 
 // [[Rcpp::export(name=".twk_decay")]]
@@ -543,7 +808,15 @@ Rcpp::S4 twk_scalc(const Rcpp::S4& twk,
     tomahawk::twk_ld ld;
 	if(ld.ComputeSingle(settings, verbose, progress) == false)
         Rcpp::stop("failed");
-	
+
+    // New instance of reader.
+    tomahawk::two_reader oreader;
+
+    // Open file handle.
+    if(oreader.Open(settings.out) == false){
+        Rcpp::stop(tomahawk::utility::timestamp("ERROR") + "Failed to open: \"" + settings.out + "\"!");
+    }
+    	
     // Iff success then load new 'twk' object.
     Rcpp::Language twk_type("new", "twk");
     Rcpp::S4 otwk( twk_type.eval() ); //use Rcpp::Language to create and assign a twk_header S4 object.
@@ -554,23 +827,17 @@ Rcpp::S4 twk_scalc(const Rcpp::S4& twk,
     Rcpp::Language datac("new", "twk_data");
     Rcpp::S4 data( datac.eval() );
 
-    // New instance of reader.
-    tomahawk::two_reader oreader;
-
-    // Open file handle.
-    if(oreader.Open(settings.out) == false){
-        Rcpp::stop(tomahawk::utility::timestamp("ERROR") + "Failed to open: \"" + settings.out + "\"!");
-    }
-
     // Start constructing contig component.
     LoadContigs(oreader, header);
     LoadSamples(oreader, header);
     LoadIndex(oreader, index);
     LoadHeaderLiterals(oreader, header);
 
-    otwk.slot("file.path") = settings.out;
     otwk.slot("index") = index;
     otwk.slot("header") = header;
+    
+    otwk.slot("file.path") = settings.out;
+    
 
     // Peek at index
     uint32_t n_avail = 0;

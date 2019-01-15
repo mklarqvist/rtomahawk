@@ -6,7 +6,7 @@
 \usage{
 calculateLDSingle(x = "twk", interval = "ANY", window = "numeric",
   minP = "numeric", minR2 = "numeric", threads = "numeric",
-  verbose = "boolean", progress = "boolean", ...)
+  verbose = "logical", progress = "logical", ...)
 }
 \arguments{
 \item{x}{Integer representing the sorted state of the file.}
@@ -54,4 +54,8 @@ y<-calculateLDSingle(twk2, g, threads = 4, window = 100000)
 \seealso{
 \code{\link{twk_data}}, \code{\link{twk_header}}, 
 \code{\link{twk_filter}}, and \code{\link{twk}}
+}
+\author{
+Marcus D. R. Klarqvist <\email{mk819@cam.ac.uk}> |
+<\href{https://mdrk.me}{https://mdrk.me}>
 }

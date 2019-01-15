@@ -6,8 +6,8 @@
 \usage{
 aggregate(x = "twk", aggregation = "character",
   reduction = "character", xbins = "numeric", ybins = "numeric",
-  minCount = "numeric", n_threads = "numeric", verbose = "boolean",
-  progress = "boolean", ...)
+  minCount = "numeric", n_threads = "numeric", verbose = "logical",
+  progress = "logical", ...)
 }
 \arguments{
 \item{x}{Input \code{\link{twk}} class holding the target path.}
@@ -44,7 +44,7 @@ description section.
 }
 \examples{
 # Assuming you have a file called "test.two" in your downloads directory.
-twk<-OpenTomahawkOutput("~/Downloads/test.two")
+twk<-openTomahawkOutput("~/Downloads/test.two")
 agg <- aggregateOutput(twk, "r2" ,"count", 1000, 1000, 50, verbose = T, threads = 4)
 plot(agg, normalized = TRUE)
 plot(agg, normalized = FALSE)
@@ -53,4 +53,8 @@ agg
 \seealso{
 \code{\link{twk_data}}, \code{\link{twk_header}}, 
 \code{\link{twk_filter}}, and \code{\link{twk}}
+}
+\author{
+Marcus D. R. Klarqvist <\email{mk819@cam.ac.uk}> |
+<\href{https://mdrk.me}{https://mdrk.me}>
 }

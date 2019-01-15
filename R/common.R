@@ -1,9 +1,20 @@
+#' rtomahawk
+#' 
+#' Description of your package
+#' 
+#' @docType package
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#' @import Rcpp
+#' @import GenomicRanges
+#' @importFrom Rcpp evalCpp
+#' @useDynLib rtomahawk, .registration = TRUE 
+#' @name rtomahawk
+NULL  
+
 # Todo:
-# view(twk, filters, really = FALSE)
-# plot(twk, interval, really = FALSE)
-suppressPackageStartupMessages({
-    library(GenomicRanges)
-})
+# haplotype(twk, ...)
+# importTomahawk(input, output) < return twk with char-pointer to output
 
 #' Print Tomahawk version string
 #'
@@ -11,10 +22,15 @@ suppressPackageStartupMessages({
 #' The extra blank line between this section and the title is
 #' critical for roxygen2 to differentiate the title from the
 #' description section.
-
+#'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
 #' @return Prints the used version of rtomahawk and the C/C++ 
 #'    shared object versions used by Tomahawk.
 #' 
+#' @useDynLib rtomahawk, .registration = TRUE 
+#' @importFrom Rcpp evalCpp
 #' @export
 #' @examples
 #' tomahawkVersion()
@@ -40,6 +56,9 @@ setMethod("tomahawkVersion",
 #' critical for roxygen2 to differentiate the title from the
 #' description section.
 #'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
 #' @slot data Main storage for data 
 #' @slot offset Data frame of offsets vectors
 #' 
@@ -57,6 +76,9 @@ twk_data <- setClass("twk_data",
 #' The extra blank line between this section and the title is
 #' critical for roxygen2 to differentiate the title from the
 #' description section.
+#'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
 #'
 #' @slot state Integer representing the sorted state of the file
 #' @slot records Data frame of index records corresponding to the boundaries of each TWO block
@@ -78,6 +100,9 @@ twk_index <- setClass("twk_index",
 #' critical for roxygen2 to differentiate the title from the
 #' description section.
 #'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
 #' @slot contigs Integer representing the sorted state of the file
 #' @slot samples Data frame of index records corresponding to the boundaries of each TWO block
 #' @slot literals Data frame of meta index records (collapsed records for each chromosome). This slot will only have values if the input file is sorted.
@@ -98,16 +123,36 @@ twk_header <- setClass("twk_header",
 #' critical for roxygen2 to differentiate the title from the
 #' description section.
 #'
-#' @slot flagInclude Text
-#' @slot flagExclude Text
-#' @slot D Text
-#' @slot Dprime Text
-#' @slot R Text
-#' @slot R2 Text
-#' @slot P Text
-#' @slot ChiSqFisher Text
-#' @slot ChiSqModel Text
-#' 
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
+#' @slot flagInclude Integer representing FLAGs to include.
+#' @slot flagExclude Integer representing FLAGs to exclude.
+#' @slot minD Smallest Lewontin D value.
+#' @slot maxD Largest Lewontin D value.
+#' @slot minDprime Smallest scaled Lewontin D value.
+#' @slot minDprime Largest scald Lewontin D value.
+#' @slot minR Smallest Pearson's correlation coefficient value.
+#' @slot minR Largest Pearson's correlation coefficient value.
+#' @slot minR2 Smallest scaled Pearson's correlation coefficient value.
+#' @slot minR2 Largest scaled Pearson's correlation coefficient value.
+#' @slot minP Smallest Fisher's exact test P-value.
+#' @slot minP Largest Fisher's exact test P-value.
+#' @slot minP1 Smallest count of REF-REF.
+#' @slot minP1 Largest count of REF-REF.
+#' @slot minP2 Smallest count of REF-ALT.
+#' @slot minP2 Largest count of REF-ALT.
+#' @slot minQ1 Smallest count of ALT-REF.
+#' @slot minQ1 Largest count of ALT-REF.
+#' @slot minQ2 Smallest count of ALT-ALT.
+#' @slot minQ2 Largest count of ALT-ALT.
+#' @slot minChiSqFisher Smallest Chi-squared test of the 2x2 haplotype table.
+#' @slot minChiSqFisher Largest Chi-squared test of the 2x2 haplotype table.
+#' @slot minChiSqModel Smallest Chi-squared test of the 4x4 genotype table.
+#' @slot minChiSqModel Largest Chi-squared test of the 4x4 genotype table.
+#' @slot upperOnly Logical flag indicating whether upper triangular values only should be kept.
+#' @slot lowerOnly Logical flag indicating whether lower triangular values only should be kept.
+#'
 #' @seealso \code{\link{twk_index}}, \code{\link{twk_data}}, 
 #' \code{\link{twk_filter}}, and \code{\link{twk}}
 #' 
@@ -137,12 +182,53 @@ twk_filter <- setClass("twk_filter",
               maxChiSqFisher = "numeric",
               minChiSqModel = "numeric",
               maxChiSqModel = "numeric",
-              upperOnly = "boolean",
-              lowerOnly = "boolean"))
+              upperOnly = "logical",
+              lowerOnly = "logical"))
 
 
+#' Set filters for a Tomahawk output records
+#'
+#' Some additional details about this S4 generic and its methods.
+#' The extra blank line between this section and the title is
+#' critical for roxygen2 to differentiate the title from the
+#' description section.
+#'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
+#' @slot flagInclude Integer representing FLAGs to include.
+#' @slot flagExclude Integer representing FLAGs to exclude.
+#' @slot minD Smallest Lewontin D value.
+#' @slot maxD Largest Lewontin D value.
+#' @slot minDprime Smallest scaled Lewontin D value.
+#' @slot minDprime Largest scald Lewontin D value.
+#' @slot minR Smallest Pearson's correlation coefficient value.
+#' @slot minR Largest Pearson's correlation coefficient value.
+#' @slot minR2 Smallest scaled Pearson's correlation coefficient value.
+#' @slot minR2 Largest scaled Pearson's correlation coefficient value.
+#' @slot minP Smallest Fisher's exact test P-value.
+#' @slot minP Largest Fisher's exact test P-value.
+#' @slot minP1 Smallest count of REF-REF.
+#' @slot minP1 Largest count of REF-REF.
+#' @slot minP2 Smallest count of REF-ALT.
+#' @slot minP2 Largest count of REF-ALT.
+#' @slot minQ1 Smallest count of ALT-REF.
+#' @slot minQ1 Largest count of ALT-REF.
+#' @slot minQ2 Smallest count of ALT-ALT.
+#' @slot minQ2 Largest count of ALT-ALT.
+#' @slot minChiSqFisher Smallest Chi-squared test of the 2x2 haplotype table.
+#' @slot minChiSqFisher Largest Chi-squared test of the 2x2 haplotype table.
+#' @slot minChiSqModel Smallest Chi-squared test of the 4x4 genotype table.
+#' @slot minChiSqModel Largest Chi-squared test of the 4x4 genotype table.
+#' @slot upperOnly Logical flag indicating whether upper triangular values only should be kept.
+#' @slot lowerOnly Logical flag indicating whether lower triangular values only should be kept.
+#'
+#' @seealso \code{\link{twk_index}}, \code{\link{twk_data}}, 
+#' \code{\link{twk_filter}}, and \code{\link{twk}}
+#' 
+#' @export
 setGeneric("setFilters", 
-    function(x="twk_filter", 
+    function(x="ANY", 
              flagInclude = "numeric",
              flagExclude = "numeric",
              minD = "numeric",
@@ -167,14 +253,114 @@ setGeneric("setFilters",
              maxChiSqFisher = "numeric",
              minChiSqModel = "numeric",
              maxChiSqModel = "numeric",
-             upperOnly = "boolean",
-             lowerOnly = "boolean",
+             upperOnly = "logical",
+             lowerOnly = "logical",
              ...)
     { 
         standardGeneric("setFilters")
     }
 )
-# Todo: write actual set filters class
+
+setMethod("setFilters",
+    signature(x="ANY"),
+    definition = function(x = NULL, 
+                          flagInclude = 4294967295, flagExclude = 0, 
+                          minD = -999999999, maxD = 999999999, 
+                          minDprime = 0, maxDprime = 999999999, 
+                          minR = -999999999, maxR = 999999999, 
+                          minR2 = 0, maxR2 = 999999999, 
+                          minP = 0, maxP = 999999999, 
+                          minP1 = 0, maxP1 = 999999999, 
+                          minP2 = 0, maxP2 = 999999999, 
+                          minQ1 = 0, maxQ1 = 999999999, 
+                          minQ2 = 0, maxQ2 = 999999999, 
+                          minChiSqFisher = 0, maxChiSqFisher = 999999999, 
+                          minChiSqModel = 0, maxChiSqModel = 999999999, 
+                          upperOnly = FALSE, lowerOnly = FALSE, 
+                          ...)
+    {
+        y <- new("twk_filter")
+        y@flagInclude = flagInclude
+        y@flagExclude = flagExclude
+        y@minD = minD
+        y@maxD = maxD
+        y@minDprime = minDprime
+        y@maxDprime = maxDprime
+        y@minR = minR
+        y@maxR = maxR
+        y@minR2 = minR2
+        y@maxR2 = maxR2
+        y@minP = minP
+        y@maxP = maxP
+        y@minP1 = minP1
+        y@maxP1 = maxP1
+        y@minP2 = minP2
+        y@maxP2 = maxP2
+        y@minQ1 = minQ1
+        y@maxQ1 = maxQ1
+        y@minQ2 = minQ2
+        y@maxQ2 = maxQ2
+        y@minChiSqFisher = minChiSqFisher
+        y@maxChiSqFisher = maxChiSqFisher
+        y@minChiSqModel = minChiSqModel
+        y@maxChiSqModel = maxChiSqModel
+        if(upperOnly & lowerOnly){
+            upperOnly <- FALSE
+            lowerOnly <- FALSE
+        }
+        y@upperOnly = upperOnly
+        y@lowerOnly = lowerOnly
+        return(y)
+    }
+)
+
+setMethod("setFilters",
+    signature(x="twk_filter"),
+    definition = function(x, 
+                          flagInclude = 4294967295, flagExclude = 0, 
+                          minD = -999999999, maxD = 999999999, 
+                          minDprime = 0, maxDprime = 999999999, 
+                          minR = -999999999, maxR = 999999999, 
+                          minR2 = 0, maxR2 = 999999999, 
+                          minP = 0, maxP = 999999999, 
+                          minP1 = 0, maxP1 = 999999999, 
+                          minP2 = 0, maxP2 = 999999999, 
+                          minQ1 = 0, maxQ1 = 999999999, 
+                          minQ2 = 0, maxQ2 = 999999999, 
+                          minChiSqFisher = 0, maxChiSqFisher = 999999999, 
+                          minChiSqModel = 0, maxChiSqModel = 999999999, 
+                          upperOnly = FALSE, lowerOnly = FALSE, 
+                          ...)
+    {
+        x@flagInclude = flagInclude
+        x@flagExclude = flagExclude
+        x@minD = minD
+        x@maxD = maxD
+        x@minDprime = minDprime
+        x@maxDprime = maxDprime
+        x@minR = minR
+        x@maxR = maxR
+        x@minR2 = minR2
+        x@maxR2 = maxR2
+        x@minP = minP
+        x@maxP = maxP
+        x@minP1 = minP1
+        x@maxP1 = maxP1
+        x@minP2 = minP2
+        x@maxP2 = maxP2
+        x@minQ1 = minQ1
+        x@maxQ1 = maxQ1
+        x@minQ2 = minQ2
+        x@maxQ2 = maxQ2
+        x@minChiSqFisher = minChiSqFisher
+        x@maxChiSqFisher = maxChiSqFisher
+        x@minChiSqModel = minChiSqModel
+        x@maxChiSqModel = maxChiSqModel
+        x@upperOnly = upperOnly
+        x@lowerOnly = lowerOnly
+        return(x)
+    }
+)
 
 #' Tomahawk output class
 #'
@@ -182,6 +368,9 @@ setGeneric("setFilters",
 #' The extra blank line between this section and the title is
 #' critical for roxygen2 to differentiate the title from the
 #' description section.
+#'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
 #'
 #' @slot file.path Character file path to the target TWO file
 #' @slot index Instance of \code{\link{twk_index}}
@@ -262,6 +451,7 @@ setMethod("head",
         args1 <- list(n = n)
         inargs <- list(...)
         args1[names(inargs)] <- inargs
+        if(nchar(x@file.path) == 0) stop("class file.path is empty")
         if(args1$n <= 0) return(NULL)
         return(rtomahawk:::.twk_head(x, args1$n));
     }
@@ -274,25 +464,26 @@ setMethod("tail",
         args1 <- list(n = n)
         inargs <- list(...)
         args1[names(inargs)] <- inargs
+        if(nchar(x@file.path) == 0) stop("class file.path is empty")
         if(args1$n <= 0) return(NULL)
         return(rtomahawk:::.twk_tail(x, args1$n));
     }
 )
 
-# Todo
 setMethod("[",
     signature(x="twk"),
-    definition = function(x, i = NULL, j = NULL, ..., drop = FALSE){
-        #args1 <- list(x = x, i = i, j = j, drop = drop)
-        #inargs <- list(...)
-        #args1[names(inargs)] <- inargs
-        return(i)
+    definition = function(x, i, j, drop = if (missing(i)) TRUE else FALSE)
+    {
+        if (missing(j)) return(x@data@data[i,,drop=drop])
+        if (missing(i)) return(x@data@data[,j,drop=drop])
+        return(x@data@data[i,j,drop=drop])
     }
 )
 
+# Todo
 setMethod("[<-",
     signature(x="twk"),
-    definition = function(x, i = NULL, j = NULL, ..., value){
+    definition = function(x, i, j, ..., value){
         #args1 <- list(x = x, i = i, j = j, drop = drop)
         #inargs <- list(...)
         #args1[names(inargs)] <- inargs
@@ -300,10 +491,50 @@ setMethod("[<-",
     }
 )
 
+setMethod("summary",
+    signature(object="twk"),
+    definition = function(object){
+        if(nrow(object@data@data) == 0) return(NULL)
+        return(do.call("rbind",lapply(object@data@data, summary, 2)))
+    }
+)
+
+setMethod("dim",
+    signature(x="twk"),
+    definition = function(x){
+        if(nrow(x@data@data) == 0) return(c(0,0))
+        return(dim(x@data@data))
+    }
+)
+
 # Basic ---------------------------
 
-setGeneric("OpenTomahawkOutput", function(input="character", ...){ standardGeneric("OpenTomahawkOutput") })
-setMethod("OpenTomahawkOutput",
+#' Open a file-handle to a Tomahawk object on disk
+#'
+#' Some additional details about this S4 generic and its methods.
+#' The extra blank line between this section and the title is
+#' critical for roxygen2 to differentiate the title from the
+#' description section.
+#'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
+#' @param input Input string pointing to the Tomahawk output file.
+#'
+#' @seealso \code{\link{twk_data}}, \code{\link{twk_header}}, 
+#' \code{\link{twk_filter}}, and \code{\link{twk}}
+#' 
+#' @export
+#' @useDynLib rtomahawk, .registration = TRUE 
+#' @importFrom Rcpp evalCpp
+#' @examples
+#' # This example assumes you have a Tomahawk file called "1kgp3_chr6.two" in
+#' # your current working directory.
+#' f<-setFilters(minR2=0.5)
+#' twk<-openTomahawkOutput("1kgp3_chr6.two")
+#' twk
+setGeneric("openTomahawkOutput", function(input="character", ...){ standardGeneric("openTomahawkOutput") })
+setMethod("openTomahawkOutput",
     signature(input="character"),
     definition = function(input, ...){
         if(nchar(input) == 0) stop("no input provided")
@@ -313,6 +544,404 @@ setMethod("OpenTomahawkOutput",
         args1[names(inargs)] <- inargs
 
         return(rtomahawk:::.OpenTomahawkOutput(input));
+    }
+)
+
+#' Reads Tomahawk output records into memory
+#'
+#' Some additional details about this S4 generic and its methods.
+#' The extra blank line between this section and the title is
+#' critical for roxygen2 to differentiate the title from the
+#' description section.
+#'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
+#' @param x Input Tomahawk class.
+#' @param intervals Filter the records using the provided intervals. The
+#'    intervals can be in either character form or as a \code{GenomicRanges}
+#'    object.
+#' @param filters Filter the records using this \code{twk_filter} class.
+#'    This parameter can be set to \code{null} to skip all filtering
+#'    procedures and read all records as is.
+#' @param really Logical flag to prevent plotting too many points.
+#'    Set this to \code{TRUE} at your own peril.
+#'
+#' @seealso \code{\link{twk_data}}, \code{\link{twk_header}}, 
+#' \code{\link{twk_filter}}, and \code{\link{twk}}
+#' 
+#' @export
+#' @useDynLib rtomahawk, .registration = TRUE 
+#' @importFrom Rcpp evalCpp
+#' @importFrom GenomicRanges GRanges
+#' @examples
+#' # This example assumes you have a Tomahawk file called "1kgp3_chr6.two" in
+#' # your current working directory.
+#' f<-setFilters(minR2=0.5)
+#' twk<-openTomahawkOutput("1kgp3_chr6.two")
+#' y<-readRecords(twk,"6:5e6-10e6",f,really=TRUE)
+#' y
+#' # Example using GenomicRanges class.
+#' require(GenomicRanges)
+#' g <- GRanges("6", IRanges(6e6, 7e6))
+#' y<-readRecords(twk,g,f,really=TRUE)
+#' y
+setGeneric("readRecords", function(x="twk", intervals = "ANY", filters = "ANY", really = "logical", ...){ standardGeneric("readRecords") })
+setMethod("readRecords",
+    signature(x="twk", intervals = "ANY"),
+    definition = function(x, intervals, filters, really = FALSE, ...){
+        if(missing(filters)) filters = setFilters()
+        if(class(filters) != "twk_filter") stop("incorrect class")
+        
+        if(!missing(intervals)){
+            if(class(intervals) == "character"){
+                for(i in 1:length(intervals)){
+                    interval_type <- rtomahawk:::.checkInterval(intervals[i])
+                    if(interval_type <= 0) stop("illegal interval")
+                }
+            } else stop("illegal interval type: only character accepted")
+        }
+
+        args1 <- list(x = x, really = really)
+        inargs <- list(...)
+        args1[names(inargs)] <- inargs
+
+        if(missing(intervals)) return(rtomahawk:::.ReadRecords(x, filters, really))
+        else return(rtomahawk:::.ReadRecordsIntervals(x, filters, intervals, really))
+    }
+)
+
+setMethod("readRecords",
+    signature(x="twk", intervals = "GRanges"),
+    definition = function(x, intervals, filters, really = FALSE, ...){
+        if(missing(filters)) filters = setFilters()
+        if(class(filters) != "twk_filter") stop("incorrect class")
+
+        if(!missing(intervals)){
+            if(class(intervals) == "GRanges"){
+                intervals <- paste0(rep(intervals@seqnames@values,intervals@seqnames@lengths),":",intervals@ranges@start,"-",intervals@ranges@start+g@ranges@width)
+            } else stop("illegal class of intervals")
+        }
+
+        args1 <- list(x = x, really = really)
+        inargs <- list(...)
+        args1[names(inargs)] <- inargs
+
+        if(missing(intervals)) return(rtomahawk:::.ReadRecords(x, filters, really))
+        else return(rtomahawk:::.ReadRecordsIntervals(x, filters, intervals, really))
+    }
+)
+
+#' Plot LD triangle
+#'
+#' Some additional details about this S4 generic and its methods.
+#' The extra blank line between this section and the title is
+#' critical for roxygen2 to differentiate the title from the
+#' description section.
+#'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
+#' @param x Input Tomahawk class.
+#' @param from Start position in base-pairs.
+#' @param to End position in base-pairs.
+#' @param colors Vector of colors used to plot with. These are different from \code{col}
+#'    as these colors are internally parsed to add opacity.
+#' @param opacity Logical flag/numerical value controlling opacity levels of colors. If
+#'    set to the logical \code{FALSE}, colours will have a uniform opacity of 1. If set
+#'    to a numerical value, colours will uniformly share that opacity level. If unset,
+#'    opacity will be a gradient from [0.1, 1] starting at R2 > 0.1.
+#' @param annotate Logical flag for setting header title and subtitle overlay on plot.
+#' @param really Logical flag to prevent plotting too many points.
+#'    Set this to \code{TRUE} at your own peril.
+#'
+#' @seealso \code{\link{twk_data}}, \code{\link{twk_header}}, 
+#' \code{\link{twk_filter}}, and \code{\link{twk}}
+#' 
+#' @export
+#' @useDynLib rtomahawk, .registration = TRUE
+#' @importFrom Rcpp evalCpp
+#' @importFrom grDevices col2rgb rgb
+#' @examples
+#' # This example assumes you have a Tomahawk file called "1kgp3_chr6.two" in
+#' # your current working directory.
+#' f<-setFilters(minR2=0.5)
+#' twk<-openTomahawkOutput("1kgp3_chr6.two")
+#' y<-readRecords(twk,f,"6:5e6-10e6",really=TRUE)
+#' plotLDTriangular(y, ylim=c(0, 500e3), xlim=c(6e6, 7e6))
+setGeneric("plotLDTriangular", function(x="twk", from = "ANY", to = "ANY", orientation = "numeric", colors = "ANY", bg = "ANY", opacity = "ANY", annotate = "logical", really = "logical", ...){ standardGeneric("plotLDTriangular") })
+setMethod("plotLDTriangular",
+    signature(x="twk"),
+    definition = function(x, from = NULL, to = NULL, orientation = 1, colors = NULL, bg = NULL, opacity = TRUE, annotate = TRUE, really = FALSE, ...){
+        if(nrow(x@data@data) == 0) stop("no data available")
+        if(length(table(y@data@data$ridA)) != 1) stop("non-unqique ridA")
+        if(length(table(y@data@data$ridB)) != 1) stop("non-unqique ridB")
+        if(all(y@data@data$ridA==y@data@data$ridB) == FALSE) stop("all ridA != ridB")
+
+        if(orientation < 1 | orientation > 4) stop("illegal orientation. must be in [1,4]")
+
+        # Prepare colours.
+        # By default, alpha levels range from 10% to 100% starting at a 
+        # cut-off of 0.1.
+        if(is.null(colors)){
+            n_colors <- 10
+            colors<-c("blue", "red")
+            alpha = c(0.1, seq(0.1, 1, length.out = n_colors + 1))
+            if(!is.null(opacity)){
+                if(!class(opacity) %in% c("logical", "numeric")) stop("unknown class type of opacity")
+                if(class(opacity) == "logical" & !opacity) alpha = 1
+                if(class(opacity) == "numeric"){
+                    if (opacity > 1L | opacity <= 0L) stop('opacity must be in (0, 1]')
+                    alpha <- opacity
+                }
+            }
+            raw_cols = colorRampPalette(colors)(n_colors)
+            raw_cols_rgb = col2rgb(raw_cols)
+            alpha_cols = rgb(
+                raw_cols_rgb[1L, ], raw_cols_rgb[2L, ], raw_cols_rgb[3L, ],
+                alpha = alpha * 255L, names = names(raw_cols),
+                maxColorValue = 255L)
+        } else {
+            if(length(colors) == 0) stop("empty colors provided")
+            n_colors <- length(colors)
+            alpha = c(0.1, seq(0.1, 1, length.out = n_colors + 1))
+            if(!is.null(opacity)){
+                if(!class(opacity) %in% c("logical", "numeric")) stop("unknown class type of opacity")
+                if(class(opacity) == "logical" & !opacity) alpha = 1
+                if(class(opacity) == "numeric"){
+                    if (opacity > 1L | opacity <= 0L) stop('opacity must be in (0, 1]')
+                    alpha <- opacity
+                }
+            }
+            raw_cols_rgb = col2rgb(colors)
+            alpha_cols = rgb(
+                raw_cols_rgb[1L, ], raw_cols_rgb[2L, ], raw_cols_rgb[3L, ],
+                alpha = alpha * 255L, names = names(colors),
+                maxColorValue = 255L)
+        }
+
+        # Arguments
+        args1 <- list(col = alpha_cols, xlab = "Position", ylab = "Position", pch = 16, cex = .2, xaxs = "i", yaxs = "i", las = 2)
+        inargs <- list(...)
+        args1[names(inargs)] <- inargs
+
+        # Infer slice range from xlim parameter if available and from/to is missing.
+        # Otherwise assume slice range is infinite.
+        if(is.null(from) & !is.null(args1$xlim)) from <- args1$xlim[1]
+        else if(is.null(from)) from <- min(x@data@data$posA)
+        if(is.null(to) & !is.null(args1$xlim)) to <- args1$xlim[2]
+        else if(is.null(to)) to <- max(x@data@data$posA)
+        if(is.null(args1$xlim)) args1$xlim <- c(from, to)
+
+        # If from < to we swap the variables.
+        if(from > to){
+            temp_from <- from
+            from <- to
+            to <- temp_from
+        }
+        
+        # Assumes all the data is from the same chromosome
+        rid <- x@data@data$ridA[1]
+        b <- x@data@data[x@data@data$posA >= from 
+                         & x@data@data$posA <= to 
+                         & x@data@data$posB >= from 
+                         & x@data@data$posB <= to 
+                         & x@data@data$posA < x@data@data$posB, c("posA","posB","R2")]
+        b <- b[order(b$R2,decreasing = F),] # sort for Z-stack
+
+        if(nrow(b) == 0) stop("no data after filter")
+
+        xd <- b$posA + ((b$posB - b$posA) / 2)
+        yd <- b$posB - b$posA
+        args1$col <- args1$col[cut(b$R2,breaks=seq(0, 1, length.out = (length(alpha_cols)-1)), include.lowest = T)]
+        if(is.null(args1$ylim)) args1$ylim <- c(0, max(b$posB - b$posA))
+        
+        # If orientation is in state 2 then flip y-axis upside down.
+        if(orientation == 2 | orientation == 4){
+            print("flipping in orientation")
+            print(args1$ylim)
+            #if(args1$ylim[2] < args1$ylim[1]){
+                #temp_ylim <- args1$ylim
+                args1$ylim <- c(args1$ylim[2], args1$ylim[1])
+            #}
+            print(args1$ylim)
+        }
+
+        # If orientation is in state 3 then swap the x,y values and the 
+        # x-axis and y-axis limits.
+        if(orientation == 3 | orientation == 4){
+            temp_ylim <- args1$ylim
+            temp_xlim <- args1$xlim
+            args1$ylim <- temp_xlim
+            args1$xlim <- temp_ylim
+        }
+
+        # Setup plot.
+        yd_fake <- -1
+        xd_fake <- -1
+        do.call("plot", c(yd_fake~xd_fake, args1))
+        # Add title
+        if(annotate){
+            title(sprintf("Linkage-disequilibrium for rid: %s", rid), adj=0)
+            mtext(sprintf("Points in view: %s",nrow(b)),adj=0,cex=1)
+        }
+        
+        # Add background.
+        if(!is.null(bg)) rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = bg)
+
+        # Add points.
+        if(orientation == 1 | orientation == 2){
+            do.call("points", c(yd~xd, args1))
+        } else {
+            do.call("points", c(xd~yd, args1))
+        }
+    }
+)
+
+#' Plot LD square
+#'
+#' Some additional details about this S4 generic and its methods.
+#' The extra blank line between this section and the title is
+#' critical for roxygen2 to differentiate the title from the
+#' description section.
+#'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
+#' @param x Input Tomahawk class.
+#' @param from Start position in base-pairs.
+#' @param to End position in base-pairs.
+#' @param colors Vector of colors used to plot with. These are different from \code{col}
+#'    as these colors are internally parsed to add opacity.
+#' @param opacity Logical flag/numerical value controlling opacity levels of colors. If
+#'    set to the logical \code{FALSE}, colours will have a uniform opacity of 1. If set
+#'    to a numerical value, colours will uniformly share that opacity level. If unset,
+#'    opacity will be a gradient from [0.1, 1] starting at R2 > 0.1.
+#' @param upper Plot only the upper triangular of values.
+#' @param lower Plot only the lower triangular of values.
+#' @param really Logical flag to prevent plotting too many points.
+#'    Set this to \code{TRUE} at your own peril.
+#'
+#' @seealso \code{\link{twk_data}}, \code{\link{twk_header}}, 
+#' \code{\link{twk_filter}}, and \code{\link{twk}}
+#' 
+#' @export
+#' @useDynLib rtomahawk, .registration = TRUE
+#' @importFrom Rcpp evalCpp
+#' @importFrom grDevices col2rgb rgb
+#' @examples
+#' # This example assumes you have a Tomahawk file called "1kgp3_chr6.two" in
+#' # your current working directory.
+#' f<-setFilters(minR2=0.1)
+#' twk<-openTomahawkOutput("1kgp3_chr6.two")
+#' y<-readRecords(twk,f,"6:5e6-10e6",really=TRUE)
+#' plotLD(y, ylim=c(5e6, 10e6), xlim=c(5e6, 10e6))
+#' plotLD(y, ylim=c(5e6, 10e6), xlim=c(5e6, 10e6), upper = TRUE)
+#' plotLD(y, ylim=c(5e6, 10e6), xlim=c(5e6, 10e6), lower = TRUE)
+setGeneric("plotLD", function(x="twk", from = "ANY", to = "ANY", colors = "ANY", bg = "ANY", opacity = "ANY", upper = "logical", lower = "logical", annotate = "logical", really = "logical", ...){ standardGeneric("plotLD") })
+setMethod("plotLD",
+    signature(x="twk"),
+    definition = function(x, from = NULL, to = NULL, colors = NULL, bg = NULL, opacity = TRUE, upper = FALSE, lower = FALSE, annotate = TRUE, really = FALSE, ...){
+        if(nrow(x@data@data) == 0) stop("no data available")
+        if(length(table(y@data@data$ridA)) != 1) stop("non-unqique ridA")
+        if(length(table(y@data@data$ridB)) != 1) stop("non-unqique ridB")
+        if(all(y@data@data$ridA==y@data@data$ridB) == FALSE) stop("all ridA != ridB")
+        if(upper & lower){
+            upper = FALSE
+            lower = FALSE
+        }
+
+        # Prepare colours.
+        # By default, alpha levels range from 10% to 100% starting at a 
+        # cut-off of 0.1.
+        if(is.null(colors)){
+            n_colors <- 10
+            colors<-c("blue", "red")
+            alpha = c(0.1, seq(0.1, 1, length.out = n_colors + 1))
+            if(!is.null(opacity)){
+                if(!class(opacity) %in% c("logical", "numeric")) stop("unknown class type of opacity")
+                if(class(opacity) == "logical" & !opacity) alpha = 1
+                if(class(opacity) == "numeric"){
+                    if (opacity > 1L | opacity <= 0L) stop('opacity must be in (0, 1]')
+                    alpha <- opacity
+                }
+            }
+            raw_cols = colorRampPalette(colors)(n_colors)
+            raw_cols_rgb = col2rgb(raw_cols)
+            alpha_cols = rgb(
+                raw_cols_rgb[1L, ], raw_cols_rgb[2L, ], raw_cols_rgb[3L, ],
+                alpha = alpha * 255L, names = names(raw_cols),
+                maxColorValue = 255L)
+        } else {
+            if(length(colors) == 0) stop("empty colors provided")
+            n_colors <- length(colors)
+            alpha = c(0.1, seq(0.1, 1, length.out = n_colors + 1))
+            if(!is.null(opacity)){
+                if(!class(opacity) %in% c("logical", "numeric")) stop("unknown class type of opacity")
+                if(class(opacity) == "logical" & !opacity) alpha = 1
+                if(class(opacity) == "numeric"){
+                    if (opacity > 1L | opacity <= 0L) stop('opacity must be in (0, 1]')
+                    alpha <- opacity
+                }
+            }
+            raw_cols_rgb = col2rgb(colors)
+            alpha_cols = rgb(
+                raw_cols_rgb[1L, ], raw_cols_rgb[2L, ], raw_cols_rgb[3L, ],
+                alpha = alpha * 255L, names = names(colors),
+                maxColorValue = 255L)
+        }
+
+        # Arguments
+        args1 <- list(col = alpha_cols, xlab = "Position", ylab = "Position", pch = 16, cex = .2, xaxs = "i", yaxs = "i", las = 2)
+        inargs <- list(...)
+        args1[names(inargs)] <- inargs
+
+        # Infer slice range from xlim parameter if available and from/to is missing.
+        # Otherwise assume slice range is infinite.
+        if(is.null(from) & !is.null(args1$xlim)) from <- args1$xlim[1]
+        else if(is.null(from)) from <- min(x@data@data$posA, x@data@data$posB)
+        if(is.null(to) & !is.null(args1$xlim)) to <- args1$xlim[2]
+        else if(is.null(to)) to <- max(x@data@data$posA, x@data@data$posB)
+        if(is.null(args1$xlim)) args1$xlim <- c(from, to)
+        if(is.null(args1$ylim)) args1$ylim <- args1$xlim
+
+        # If from < to we swap the variables.
+        if(from > to){
+            temp_from <- from
+            from <- to
+            to <- temp_from
+        }
+        
+        # Assumes all the data is from the same chromosome
+        rid <- x@data@data$ridA[1]
+        b <- x@data@data[x@data@data$posA >= from 
+                         & x@data@data$posA <= to 
+                         & x@data@data$posB >= from 
+                         & x@data@data$posB <= to, c("posA","posB","R2")]
+        b <- b[order(b$R2,decreasing = F),] # sort for Z-stack
+
+        if(upper) b <- b[b$posA < b$posB,]
+        if(lower) b <- b[b$posB < b$posA,]
+
+        if(nrow(b) == 0) stop("no data after filter")
+        xd <- b$posA
+        yd <- b$posB
+        args1$col <- args1$col[cut(b$R2,breaks=seq(0, 1, length.out = (length(alpha_cols)-1)), include.lowest = T)]
+
+        # Setup plot.
+        yd_fake <- -1
+        xd_fake <- -1
+        do.call("plot", c(yd_fake~xd_fake, args1))
+        # Add title
+        if(annotate){
+            title(sprintf("Linkage-disequilibrium for rid: %s", rid), adj=0)
+            mtext(sprintf("Points in view: %s",nrow(b)),adj=0,cex=1)
+        }
+
+        # Add background.
+        if(!is.null(bg)) rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = bg)
+        # Add points.
+        do.call("points", c(yd~xd, args1))
     }
 )
 
@@ -340,6 +969,9 @@ setMethod("decay",
 #' critical for roxygen2 to differentiate the title from the
 #' description section.
 #'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
 #' @param x Integer representing the sorted state of the file.
 #' @param interval This parameter can be either a character string 
 #'    encoded as "CHR:POS" or a GenomicRanges object overlapping a 
@@ -366,6 +998,9 @@ setMethod("decay",
 #' \code{\link{twk_filter}}, and \code{\link{twk}}
 #' 
 #' @export
+#' @useDynLib rtomahawk, .registration = TRUE 
+#' @importFrom Rcpp evalCpp
+#' @importFrom GenomicRanges GRanges
 #' @examples
 #' # This example assumes you have a Tomahawk file called "1kgp3_chr6.twk" in
 #' # your current working directory.
@@ -421,6 +1056,7 @@ setMethod("plotLZ",
         inargs <- list(...)
         args1[names(inargs)] <- inargs
 
+        # Check the intervals for correct formatting.
         interval_type <- rtomahawk:::.checkInterval(args1$interval)
         if(interval_type == 2){
             # good
@@ -449,7 +1085,7 @@ setMethod("plotLZ",
         }
 
         ld<-rtomahawk:::.twk_scalc(x, args1$interval, args1$window, args1$minP, args1$minR2, args1$threads, args1$verbose, args1$progress)
-
+    
         from<-tgt_snp - window
         to<-tgt_snp + window
         pos<-snp$Position[snp$Position>from&snp$Position<to]
@@ -484,7 +1120,7 @@ setMethod("plotLZ",
 )
 
 setMethod("plotLZ",
-    signature(interval="GenomicRanges"),
+    signature(interval="GRanges"),
     definition = function(x, interval, snp, gmap, window = 500000, minP = 1, minR2 = 0.01, threads = 1, verbose = FALSE, ...){
         if(nrow(snp) == 0) stop("no input snp data")
         if(length(gmap) == 0) stop("no input gmap data")
@@ -553,6 +1189,9 @@ setMethod("plotLZ",
 #' critical for roxygen2 to differentiate the title from the
 #' description section.
 #'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
 #' @slot twk Instance of a \code{\link{twk}} object. This is the 
 #'    computed information that is returned from the underlying 
 #'    \code{.Call} to Tomahawk. Note that no data is stored in
@@ -607,6 +1246,9 @@ setMethod("show",
 #' critical for roxygen2 to differentiate the title from the
 #' description section.
 #'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
 #' @param x Input \code{\link{twk}} class holding the target path.
 #' @param aggregation String representing the aggregation function to use
 #'    on the input data.
@@ -628,9 +1270,11 @@ setMethod("show",
 #' \code{\link{twk_filter}}, and \code{\link{twk}}
 #' 
 #' @export
+#' @useDynLib rtomahawk, .registration = TRUE 
+#' @importFrom Rcpp evalCpp
 #' @examples
 #' # Assuming you have a file called "test.two" in your downloads directory.
-#' twk<-OpenTomahawkOutput("~/Downloads/test.two")
+#' twk<-openTomahawkOutput("~/Downloads/test.two")
 #' agg <- aggregateOutput(twk, "r2" ,"count", 1000, 1000, 50, verbose = T, threads = 4)
 #' plot(agg, normalized = TRUE)
 #' plot(agg, normalized = FALSE)
@@ -643,8 +1287,8 @@ setGeneric("aggregate",
              ybins = "numeric", 
              minCount = "numeric", 
              n_threads = "numeric", 
-             verbose = "boolean", 
-             progress = "boolean", ...)
+             verbose = "logical", 
+             progress = "logical", ...)
     { 
         standardGeneric("aggregate") 
     }
@@ -682,10 +1326,36 @@ setMethod("aggregate",
     }
 )
 
-# General plotting method for aggregation.
-setGeneric("plot", function(x="twk_agg", y="ANY", ...) standardGeneric("plot"))
-setMethod("plot",
-    signature(x="twk_agg", y="ANY"),
+#' General plotting method for Tomahawk aggregation.
+#'
+#' Some additional details about this S4 generic and its methods.
+#' The extra blank line between this section and the title is
+#' critical for roxygen2 to differentiate the title from the
+#' description section.
+#'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
+#' @param x Instance of a \code{\link{twk}} object. This is the 
+#'    computed information that is returned from the underlying 
+#'    \code{.Call} to Tomahawk. Note that no data is stored in
+#'    this object in this case.
+#'
+#' @seealso \code{\link{twk_data}}, \code{\link{twk_header}}, 
+#' \code{\link{twk_filter}}, and \code{\link{twk}}
+#' 
+#' @export
+#' @examples
+#' # This example assumes you have a Tomahawk file called "1kgp3_chr6.two" in
+#' # your current working directory.
+#' twk<-rtomahawk::OpenTomahawkOutput("1kgp3_chr6.two")
+#' x<-aggregate(twk,"r2","count",1000,1000,50,verbose=T,threads=4)
+#' plot(x,normalized=TRUE)
+#' plot(x,normalized=FALSE)
+#' x
+setGeneric("plotAggregation", function(x="twk_agg", normalize="logical", ...) standardGeneric("plotAggregation"))
+setMethod("plotAggregation",
+    signature(x="twk_agg"),
     definition = function(x, normalize = TRUE, ...){
         if(length(x@data) == 0)
             stop("no data available")
@@ -728,6 +1398,9 @@ setMethod("plot",
 #' critical for roxygen2 to differentiate the title from the
 #' description section.
 #'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
 #' @param x Integer representing the sorted state of the file.
 #' @param interval This parameter can be either a character string 
 #'    encoded as "CHR:POS" or a GenomicRanges object overlapping a 
@@ -749,6 +1422,9 @@ setMethod("plot",
 #' \code{\link{twk_filter}}, and \code{\link{twk}}
 #' 
 #' @export
+#' @useDynLib rtomahawk, .registration = TRUE 
+#' @importFrom Rcpp evalCpp
+#' @importFrom GenomicRanges GRanges
 #' @examples
 #' # This example assumes you have a Tomahawk file called "1kgp3_chr6.twk" in
 #' # your current working directory.
@@ -766,8 +1442,8 @@ setGeneric("calculateLDSingle",
              minP = "numeric", 
              minR2 = "numeric", 
              threads = "numeric", 
-             verbose = "boolean", 
-             progress = "boolean", ...)
+             verbose = "logical", 
+             progress = "logical", ...)
     { 
         standardGeneric("calculateLDSingle") 
     }
@@ -793,6 +1469,7 @@ setMethod("calculateLDSingle",
         if(args1$minR2 < 0 | args1$minR2 > 1) stop("minR2 < 0 or minR2 > 1")
         if(args1$threads <= 0) stop("threads <= 0")
 
+        # Check the intervals for correct formatting.
         interval_type <- rtomahawk:::.checkInterval(args1$interval)
         if(interval_type == 2){
             # good
@@ -816,7 +1493,7 @@ setMethod("calculateLDSingle",
 )
 
 setMethod("calculateLDSingle",
-    signature(interval="GenomicRanges"),
+    signature(interval="GRanges"),
     definition = function(x, interval, window = 500000, minP = 1, minR2 = 0, n_threads = 1, verbose = FALSE, progress = FALSE, ...){
         if(length(interval) != 1)
             stop("Number of intervals is not 1!")

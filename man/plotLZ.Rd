@@ -79,3 +79,7 @@ z <- plotLZ(twk2, g, snp, gmap, window = 1000000, minR2 = 0, verbose=TRUE)
 \code{\link{twk_data}}, \code{\link{twk_header}}, 
 \code{\link{twk_filter}}, and \code{\link{twk}}
 }
+\author{
+Marcus D. R. Klarqvist <\email{mk819@cam.ac.uk}> |
+<\href{https://mdrk.me}{https://mdrk.me}>
+}

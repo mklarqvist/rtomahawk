@@ -77,8 +77,8 @@ plotLZ<-function(twk, tgt_snp, window, snp, gmap, threads=4){
 # Slice out region with twk view -i <file.two> -I 6,6:32626301
 twk<-rtomahawk::LoadHeader("~/Downloads/tests.two")
 ld<-head(twk,1000000)
-ld$posA<-ld$posA+1
-ld$posB<-ld$posB+1
+#ld$posA<-ld$posA+1
+#ld$posB<-ld$posB+1
 # temp
 #ld<-ld[!duplicated(paste0(ld$posA,ld$posB)),]
 

@@ -19,3 +19,7 @@ description section.
 \examples{
 tomahawkVersion()
 }
+\author{
+Marcus D. R. Klarqvist <\email{mk819@cam.ac.uk}> |
+<\href{https://mdrk.me}{https://mdrk.me}>
+}

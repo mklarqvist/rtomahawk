@@ -94,6 +94,33 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ReadRecordsIntervals
+Rcpp::S4 ReadRecordsIntervals(const Rcpp::S4& twk, const Rcpp::S4& filters, const std::vector<std::string>& intervals, bool really);
+RcppExport SEXP _rtomahawk_ReadRecordsIntervals(SEXP twkSEXP, SEXP filtersSEXP, SEXP intervalsSEXP, SEXP reallySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type twk(twkSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type filters(filtersSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type intervals(intervalsSEXP);
+    Rcpp::traits::input_parameter< bool >::type really(reallySEXP);
+    rcpp_result_gen = Rcpp::wrap(ReadRecordsIntervals(twk, filters, intervals, really));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ReadRecords
+Rcpp::S4 ReadRecords(const Rcpp::S4& twk, const Rcpp::S4& filters, bool really);
+RcppExport SEXP _rtomahawk_ReadRecords(SEXP twkSEXP, SEXP filtersSEXP, SEXP reallySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type twk(twkSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type filters(filtersSEXP);
+    Rcpp::traits::input_parameter< bool >::type really(reallySEXP);
+    rcpp_result_gen = Rcpp::wrap(ReadRecords(twk, filters, really));
+    return rcpp_result_gen;
+END_RCPP
+}
 // twk_decay
 Rcpp::DataFrame twk_decay(Rcpp::S4& obj, uint32_t range, uint32_t n_bins);
 RcppExport SEXP _rtomahawk_twk_decay(SEXP objSEXP, SEXP rangeSEXP, SEXP n_binsSEXP) {
@@ -165,6 +192,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rtomahawk_twk_head", (DL_FUNC) &_rtomahawk_twk_head, 2},
     {"_rtomahawk_twk_tail", (DL_FUNC) &_rtomahawk_twk_tail, 2},
     {"_rtomahawk_OpenTomahawkOutput", (DL_FUNC) &_rtomahawk_OpenTomahawkOutput, 1},
+    {"_rtomahawk_ReadRecordsIntervals", (DL_FUNC) &_rtomahawk_ReadRecordsIntervals, 4},
+    {"_rtomahawk_ReadRecords", (DL_FUNC) &_rtomahawk_ReadRecords, 3},
     {"_rtomahawk_twk_decay", (DL_FUNC) &_rtomahawk_twk_decay, 3},
     {"_rtomahawk_twk_read_aggregate", (DL_FUNC) &_rtomahawk_twk_read_aggregate, 1},
     {"_rtomahawk_twk_aggregate", (DL_FUNC) &_rtomahawk_twk_aggregate, 9},

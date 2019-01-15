@@ -27,3 +27,7 @@ description section.
 \code{\link{twk_index}}, \code{\link{twk_header}}, 
 \code{\link{twk_filter}}, and \code{\link{twk}}
 }
+\author{
+Marcus D. R. Klarqvist <\email{mk819@cam.ac.uk}> |
+<\href{https://mdrk.me}{https://mdrk.me}>
+}
