@@ -4,13 +4,21 @@
 \alias{plotAggregation}
 \title{General plotting method for Tomahawk aggregation.}
 \usage{
-plotAggregation(x = "twk_agg", normalize = "logical", ...)
+plotAggregation(x = "twk_agg", colors = "character",
+  normalize = "logical", annotate = "logical", legend = "logical",
+  ...)
 }
 \arguments{
 \item{x}{Instance of a \code{\link{twk}} object. This is the 
 computed information that is returned from the underlying 
 \code{.Call} to Tomahawk. Note that no data is stored in
 this object in this case.}
+
+\item{normalize}{Logical flag indicating if the colour scheme
+should be quantile normalized to even out the ranges.}
+
+\item{annote}{Logical flag indicating if titles and axes should
+should be added.}
 }
 \description{
 Some additional details about this S4 generic and its methods.

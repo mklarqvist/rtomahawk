@@ -16,6 +16,99 @@ NULL
 # haplotype(twk, ...)
 # importTomahawk(input, output) < return twk with char-pointer to output
 
+# Colors ------------------------------
+
+twk_color_validator <- function(n, alpha, begin, end, direction)
+{
+    if (begin < 0 | begin > 1 | end < 0 | end > 1) {
+        stop("begin and end must be in [0,1]")
+    }
+    if (abs(direction) != 1) {
+        stop("direction must be 1 or -1")
+    }
+}
+
+twk_color_mapper <- function(name, n, alpha = 1, begin = 0, end = 1, direction = 1)
+{
+    map <- rtomahawk:::twk_colors[rtomahawk:::twk_colors$opt == name, ]
+    map_cols <- grDevices::rgb(map$R, map$G, map$B)
+    fn_cols <- grDevices::colorRamp(map_cols, space = "Lab",  interpolate = "spline")
+    cols <- fn_cols(seq(begin, end, length.out = n))/255
+    return(grDevices::rgb(cols[, 1], cols[, 2], cols[, 3], alpha = alpha))
+}
+
+#' @export
+viridis <- function(n, alpha = 1, begin = 0, end = 1, direction = 1) 
+{
+    rtomahawk:::twk_color_validator(n, alpha, begin, end, direction)
+
+    if (direction == -1) {
+        tmp <- begin
+        begin <- end
+        end <- tmp
+    }
+
+    return(rtomahawk:::twk_color_mapper("viridis", n, alpha, begin, end, direction))
+}
+
+#' @export
+cividis <- function(n, alpha = 1, begin = 0, end = 1, direction = 1) 
+{
+    rtomahawk:::twk_color_validator(n, alpha, begin, end, direction)
+
+    if (direction == -1) {
+        tmp <- begin
+        begin <- end
+        end <- tmp
+    }
+
+    return(rtomahawk:::twk_color_mapper("cividis", n, alpha, begin, end, direction))
+}
+
+#' @export
+plasma <- function(n, alpha = 1, begin = 0, end = 1, direction = 1) 
+{
+    rtomahawk:::twk_color_validator(n, alpha, begin, end, direction)
+
+    if (direction == -1) {
+        tmp <- begin
+        begin <- end
+        end <- tmp
+    }
+
+    return(rtomahawk:::twk_color_mapper("plasma", n, alpha, begin, end, direction))
+}
+
+#' @export
+inferno <- function(n, alpha = 1, begin = 0, end = 1, direction = 1) 
+{
+    rtomahawk:::twk_color_validator(n, alpha, begin, end, direction)
+
+    if (direction == -1) {
+        tmp <- begin
+        begin <- end
+        end <- tmp
+    }
+
+    return(rtomahawk:::twk_color_mapper("inferno", n, alpha, begin, end, direction))
+}
+
+#' @export
+magma <- function(n, alpha = 1, begin = 0, end = 1, direction = 1) 
+{
+    rtomahawk:::twk_color_validator(n, alpha, begin, end, direction)
+
+    if (direction == -1) {
+        tmp <- begin
+        begin <- end
+        end <- tmp
+    }
+
+    return(rtomahawk:::twk_color_mapper("magma", n, alpha, begin, end, direction))
+}
+
+# Support --------------------------
+
 #' Print Tomahawk version string
 #'
 #' Some additional details about this S4 generic and its methods.
@@ -48,6 +141,7 @@ setMethod("tomahawkVersion",
     }
 )
 
+# Classes ------------------------------------
 
 #' Tomahawk output data class
 #'
@@ -507,6 +601,125 @@ setMethod("dim",
     }
 )
 
+# Support -------------------------
+
+addGenomicAxis <- function(limit, at = 1, las1 = 1, scaleMax = FALSE){
+    if(class(limit) != "numeric") stop("limit must be numeric")
+    if(length(limit) != 2) stop("limit must be of size 2")
+    
+    if(abs(limit[2] - limit[1]) < 1e3){ 
+        print("in < 1e3")
+        tick_pos <- seq(round(min(limit),-2),round(max(limit),-2), by = 1e2)
+        print(tick_pos)
+        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
+        else tick_labels <- paste0(tick_pos/1e3,"Kb")
+        axis(at, at=tick_pos, labels=tick_labels, las = las1)
+        
+        tick_pos_add <- seq(round(min(limit),-2),round(max(limit),-2), by = 10)
+        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
+        suppressWarnings(rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey"))
+    }
+    else if(abs(limit[2] - limit[1]) < 10e3){ 
+        print("in < 10e3")
+        tick_pos <- seq(round(min(limit),-3),round(max(limit),-3), by = 1e3)
+        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
+        else tick_labels <- paste0(tick_pos/1e3,"Kb")
+        axis(at, at=tick_pos, labels=tick_labels, las = las1)
+        
+        tick_pos_add <- seq(round(min(limit),-3),round(max(limit),-3), by = 100)
+        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
+        suppressWarnings(rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey"))
+    }
+    else if(abs(limit[2] - limit[1]) < 100e3){ 
+        print("in < 100e3")
+        tick_pos <- seq(round(min(limit),-4),round(max(limit),-4), by = 10e3)
+        drop_lower <- FALSE
+        if(length(tick_pos) < 4){
+            tick_pos <- unique(c(round(min(limit),-3)-1e3, seq(round(min(limit),-3),round(max(limit),-3), by = 1e3), round(max(limit),-3)+1e3))
+            drop_lower <- TRUE
+        }
+        
+        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
+        else tick_labels <- paste0(tick_pos/1e3,"Kb")
+        
+        if(!scaleMax) axis(at, at=tick_pos, labels=tick_labels, las = las1)
+        else axis(at, at=tick_pos/max(limit), labels=tick_labels, las = las1)
+        
+        if(!drop_lower) tick_pos_add <- seq(round(min(limit),-4),round(max(limit),-4), by = 1e3)
+        else tick_pos_add <- seq(min(tick_pos), max(tick_pos), by = 100)
+        
+        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
+        if(!scaleMax) suppressWarnings(rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey"))
+        else suppressWarnings(rug(x = tick_pos_add / max(limit), ticksize = -0.02, side = at, col = "darkgrey"))
+    }
+    else if(abs(limit[2] - limit[1]) < 1e6){ 
+        print("in < 1e6")
+        tick_pos <- seq(round(min(limit),-5),round(max(limit),-5), by = 100e3)
+        drop_lower <- FALSE
+        if(length(tick_pos) < 4){
+            tick_pos <- unique(c(round(min(limit),-4)-10e3, seq(round(min(limit),-4),round(max(limit),-4), by = 10e3), round(max(limit),-4)+10e3))
+            drop_lower <- TRUE
+        }
+        
+        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
+        else tick_labels <- paste0(tick_pos/1e3,"Kb")
+        
+        if(!scaleMax) axis(at, at=tick_pos, labels=tick_labels, las = las1)
+        else axis(at, at=tick_pos/max(limit), labels=tick_labels, las = las1)
+        
+        if(!drop_lower) tick_pos_add <- seq(round(min(limit),-5),round(max(limit),-5), by = 10e3)
+        else tick_pos_add <- seq(min(tick_pos), max(tick_pos), by = 1e3)
+        
+        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
+        if(!scaleMax) suppressWarnings(rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey"))
+        else suppressWarnings(rug(x = tick_pos_add / max(limit), ticksize = -0.02, side = at, col = "darkgrey"))
+    }
+    else if(abs(limit[2] - limit[1]) < 10e6){ 
+        print("in < 10e6")
+        tick_pos <- seq(round(min(limit),-6),round(max(limit),-6), by = 1e6)
+        drop_lower <- FALSE
+        if(length(tick_pos) < 4){
+            tick_pos <- unique(c(round(min(limit),-5)-100e3, seq(round(min(limit),-5),round(max(limit),-5), by = 100e3), round(max(limit),-5)+100e3))
+            drop_lower <- TRUE
+        }
+        
+        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
+        else tick_labels <- paste0(tick_pos/1e3,"Kb")
+        
+        if(!scaleMax) axis(at, at=tick_pos, labels=tick_labels, las = las1)
+        else axis(at, at=tick_pos/max(limit), labels=tick_labels, las = las1)
+        
+        if(!drop_lower) tick_pos_add <- seq(round(min(limit),-6),round(max(limit),-6), by = 100e3)
+        else tick_pos_add <- seq(min(tick_pos), max(tick_pos), by = 10e3)
+        
+        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
+        if(!scaleMax) suppressWarnings(rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey"))
+        else suppressWarnings(rug(x = tick_pos_add / max(limit), ticksize = -0.02, side = at, col = "darkgrey"))
+    }
+    else if(abs(limit[2] - limit[1]) < 100e6){ 
+        print("in < 100e6")
+        tick_pos <- seq(round(min(limit),-7),round(max(limit),-7), by = 10e6)
+        drop_lower <- FALSE
+        if(length(tick_pos) < 4){
+            tick_pos <- unique(c(round(min(limit),-6)-1e6, seq(round(min(limit),-6),round(max(limit),-6), by = 1e6), round(max(limit),-6)+1e6))
+            drop_lower <- TRUE
+        }
+
+        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
+        else tick_labels <- paste0(tick_pos/1e3,"Kb")
+        
+        if(!scaleMax) axis(at, at=tick_pos, labels=tick_labels, las = las1)
+        else axis(at, at=tick_pos/max(limit), labels=tick_labels, las = las1)
+        
+        if(!drop_lower) tick_pos_add <- seq(round(min(limit),-7),round(max(limit),-7), by = 1e6)
+        else tick_pos_add <- seq(min(tick_pos), max(tick_pos), by = 100e3)
+        
+        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
+        if(!scaleMax) suppressWarnings(rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey"))
+        else suppressWarnings(rug(x = tick_pos_add / max(limit), ticksize = -0.02, side = at, col = "darkgrey"))
+    }
+}
+
 # Basic ---------------------------
 
 #' Open a file-handle to a Tomahawk object on disk
@@ -721,9 +934,19 @@ setMethod("plotLDTriangular",
         }
 
         # Arguments
-        args1 <- list(col = alpha_cols, xlab = "Position", ylab = "Position", pch = 16, cex = .2, xaxs = "i", yaxs = "i", las = 2)
+        args1 <- list(col = alpha_cols, pch = 16, cex = .2, xaxs = "i", yaxs = "i", las = 2, axes = FALSE)
         inargs <- list(...)
         args1[names(inargs)] <- inargs
+        
+        # Allow user to override internal plotting parameters.
+        custom_xlab = TRUE
+        custom_ylab = TRUE
+        custom_xaxt = TRUE
+        custom_yaxt = TRUE
+        if(is.null(args1$xlab)){ args1$xlab = "";  custom_xlab = FALSE; }
+        if(is.null(args1$ylab)){ args1$ylab = "";  custom_ylab = FALSE; }
+        if(is.null(args1$xaxt)){ args1$xaxt = "n"; custom_xaxt = FALSE; }
+        if(is.null(args1$yaxt)){ args1$yaxt = "n"; custom_yaxt = FALSE; }
 
         # Infer slice range from xlim parameter if available and from/to is missing.
         # Otherwise assume slice range is infinite.
@@ -733,7 +956,7 @@ setMethod("plotLDTriangular",
         else if(is.null(to)) to <- max(x@data@data$posA)
         if(is.null(args1$xlim)) args1$xlim <- c(from, to)
 
-        # If from < to we swap the variables.
+        # If from < to we swap the (from, to) variables.
         if(from > to){
             temp_from <- from
             from <- to
@@ -747,6 +970,7 @@ setMethod("plotLDTriangular",
                          & x@data@data$posB >= from 
                          & x@data@data$posB <= to 
                          & x@data@data$posA < x@data@data$posB, c("posA","posB","R2")]
+        if(!is.null(args1$ylim)) b <- b[(b$posB - b$posA) < args1$ylim[2], ] # limit for y-axis
         b <- b[order(b$R2,decreasing = F),] # sort for Z-stack
 
         if(nrow(b) == 0) stop("no data after filter")
@@ -782,90 +1006,33 @@ setMethod("plotLDTriangular",
         do.call("plot", c(yd_fake~xd_fake, args1))
         # Add title
         if(annotate){
-            title(sprintf("Linkage-disequilibrium for rid: %s", rid), adj=0)
-            mtext(sprintf("Points in view: %s",nrow(b)),adj=0,cex=1)
+            if(is.null(args1$main)){
+                title(sprintf("Linkage-disequilibrium for rid: %s", rid), adj=0)
+                mtext(sprintf("Points in view: %s",nrow(b)),adj=0,cex=1)
+            }
         }
         
         # Add background.
         if(!is.null(bg)) rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = bg)
 
+        args1[["axes"]] <- NULL
         # Add points.
         if(orientation == 1 | orientation == 2){
             do.call("points", c(yd~xd, args1))
+            
         } else {
             do.call("points", c(xd~yd, args1))
         }
+        
+        # Add axis if annotate and not user-specified custom parameters.
+        if(annotate){
+            if(custom_xaxt == FALSE) rtomahawk:::addGenomicAxis(args1$xlim, 1, 1)
+            if(custom_xlab == FALSE) mtext(side = 1, line = 3, "Position (from)")
+            if(custom_yaxt == FALSE) rtomahawk:::addGenomicAxis(args1$ylim, 2, 2)
+            if(custom_ylab == FALSE) mtext(side = 2, line = 3, "Position (to)")
+        }
     }
 )
-
-addGenomicAxis <- function(limit, at=1, las1 = 1){
-    if(class(limit) != "numeric") stop("limit must be numeric")
-    if(length(limit) != 2) stop("limit must be of size 2")
-    
-    if(abs(limit[2] - limit[1]) < 1e3){ 
-        #print("in < 1e3")
-        tick_pos <- seq(round(min(limit),-2),round(max(limit),-2), by = 1e2)
-        print(tick_pos)
-        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
-        else tick_labels <- paste0(tick_pos/1e3,"Kb")
-        axis(at, at=tick_pos, labels=tick_labels, las = las1)
-        
-        tick_pos_add <- seq(round(min(limit),-2),round(max(limit),-2), by = 10)
-        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
-        rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey")
-    }
-    else if(abs(limit[2] - limit[1]) < 10e3){ 
-        #print("in < 10e3")
-        tick_pos <- seq(round(min(limit),-3),round(max(limit),-3), by = 1e3)
-        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
-        else tick_labels <- paste0(tick_pos/1e3,"Kb")
-        axis(at, at=tick_pos, labels=tick_labels, las = las1)
-        
-        tick_pos_add <- seq(round(min(limit),-3),round(max(limit),-3), by = 100)
-        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
-        rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey")
-    }
-    else if(abs(limit[2] - limit[1]) < 100e3){ 
-        #print("in < 100e3")
-        tick_pos <- seq(round(min(limit),-4),round(max(limit),-4), by = 10e3)
-        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
-        else tick_labels <- paste0(tick_pos/1e3,"Kb")
-        axis(at, at=tick_pos, labels=tick_labels, las = las1)
-        tick_pos_add <- seq(round(min(limit),-4),round(max(limit),-4), by = 1e3)
-        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
-        rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey")
-    }
-    else if(abs(limit[2] - limit[1]) < 1e6){ 
-        #print("in < 1e6")
-        tick_pos <- seq(round(min(limit),-5),round(max(limit),-5), by = 100e3)
-        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
-        else tick_labels <- paste0(tick_pos/1e3,"Kb")
-        axis(at, at=tick_pos, labels=tick_labels, las = las1)
-        tick_pos_add <- seq(round(min(limit),-5),round(max(limit),-5), by = 10e3)
-        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
-        rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey")
-    }
-    else if(abs(limit[2] - limit[1]) < 10e6){ 
-        print("in < 10e6")
-        tick_pos <- seq(round(min(limit),-6),round(max(limit),-6), by = 1e6)
-        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
-        else tick_labels <- paste0(tick_pos/1e3,"Kb")
-        axis(at, at=tick_pos, labels=tick_labels, las = las1)
-        tick_pos_add <- seq(round(min(limit),-6),round(max(limit),-6), by = 100e3)
-        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
-        rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey")
-    }
-    else if(abs(limit[2] - limit[1]) < 100e6){ 
-        #print("in < 10e6")
-        tick_pos <- seq(round(min(limit),-7),round(max(limit),-7), by = 10e6)
-        if(round(max(limit),-3) > 1e6) tick_labels <- paste0(tick_pos/1e6,"Mb")
-        else tick_labels <- paste0(tick_pos/1e3,"Kb")
-        axis(at, at=tick_pos, labels=tick_labels, las = las1)
-        tick_pos_add <- seq(round(min(limit),-7),round(max(limit),-7), by = 1e6)
-        tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
-        rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey")
-    }
-}
 
 #' Plot LD square
 #'
@@ -995,7 +1162,7 @@ setMethod("plotLD",
         
         xd <- b$posA
         yd <- b$posB
-        args1$col <- args1$col[cut(b$R2,breaks=seq(0, 1, length.out = (length(alpha_cols)-1)), include.lowest = T)]
+        args1$col <- args1$col[cut(b$R2,breaks=seq(0, 1, length.out = (length(alpha_cols)-1)), include.lowest = TRUE, right = TRUE)]
 
         # Setup plot.
         yd_fake <- -1
@@ -1010,13 +1177,13 @@ setMethod("plotLD",
         # Add background.
         if(!is.null(bg)) rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = bg)
         # Add points.
-        args1[["axes"]]<-NULL
+        args1[["axes"]] <- NULL
         do.call("points", c(yd~xd, args1))
 
         # Add axis
         # Todo: will produce incorrect order if xaxis is flipped (descending order)
-        addGenomicAxis(args1$xlim, 1, 1)
-        addGenomicAxis(args1$ylim, 2, 2)
+        rtomahawk:::addGenomicAxis(args1$xlim, 1, 1)
+        rtomahawk:::addGenomicAxis(args1$ylim, 2, 2)
     }
 )
 
@@ -1125,23 +1292,33 @@ setMethod("plotLZ",
     definition = function(x, interval, snp, gmap, window = 500000, minP = 1, minR2 = 0.01, threads = 1, verbose = FALSE, ...){
         if(nrow(snp) == 0) stop("no input snp data")
         if(length(gmap) == 0) stop("no input gmap data")
-        if(nchar(args1$interval) == 0) stop("no interval provided")
+        if(nchar(interval) == 0) stop("no interval provided")
 
-        args1 <- list(x = x, interval = interval, window = window, snp = snp, gmap = gmap, minP = minP, minR2 = minR2, threads = threads, verbose = verbose, progress = FALSE)
+        args1 <- list(progress = FALSE, xaxs = "i", yaxs = "i", las = 2, axes = FALSE, pch = 21)
         inargs <- list(...)
         args1[names(inargs)] <- inargs
 
+        # Allow user to override internal plotting parameters.
+        custom_xlab = TRUE
+        custom_ylab = TRUE
+        custom_xaxt = TRUE
+        custom_yaxt = TRUE
+        if(is.null(args1$xlab)){ args1$xlab = "";  custom_xlab = FALSE; }
+        if(is.null(args1$ylab)){ args1$ylab = "";  custom_ylab = FALSE; }
+        if(is.null(args1$xaxt)){ args1$xaxt = "n"; custom_xaxt = FALSE; }
+        if(is.null(args1$yaxt)){ args1$yaxt = "n"; custom_yaxt = FALSE; }
+
         # Check the intervals for correct formatting.
-        interval_type <- rtomahawk:::.checkInterval(args1$interval)
+        interval_type <- rtomahawk:::.checkInterval(interval)
         if(interval_type == 2){
             # good
-            tgt_chr <- as.numeric(strsplit(args1$interval, ":")[[1]][1])
-            tgt_snp <- as.numeric(strsplit(args1$interval, ":")[[1]][2])
+            tgt_chr <- as.numeric(strsplit(interval, ":")[[1]][1])
+            tgt_snp <- as.numeric(strsplit(interval, ":")[[1]][2])
         } else if(interval_type == 3){
-            pos_temp <- strsplit(strsplit(args1$interval,":")[[1]][2],"-")[[1]]
+            pos_temp <- strsplit(strsplit(interval,":")[[1]][2],"-")[[1]]
             if(pos_temp[1] != pos_temp[2])
                 stop("illegal interval. interval may only encompass a single position")
-            tgt_chr <- as.numeric(strsplit(args1$interval, ":")[[1]][1])
+            tgt_chr <- as.numeric(strsplit(interval, ":")[[1]][1])
             tgt_snp <- as.numeric(pos_temp[1])
         } else {
             stop("illegal interval")
@@ -1159,36 +1336,70 @@ setMethod("plotLZ",
             stop("cannot find target snp in set")
         }
 
-        ld<-rtomahawk:::.twk_scalc(x, args1$interval, args1$window, args1$minP, args1$minR2, args1$threads, args1$verbose, args1$progress)
+        ld<-rtomahawk:::.twk_scalc(x, interval, window, minP, minR2, threads, verbose, args1$progress)
+        args1[["progress"]] <- NULL
     
-        from<-tgt_snp - window
-        to<-tgt_snp + window
-        pos<-snp$Position[snp$Position>from&snp$Position<to]
-        posLD<-pos[pos%in%union(ld@data@data$posA,ld@data@data$posB)]
-        pvals<-snp$p[snp$Position>from&snp$Position<to]
-        pvalsLD<-pvals[which(pos%in%posLD)]
+        from <- tgt_snp - window
+        to <- tgt_snp + window
+        args1$xlim <- c(from, to)
+        pos <- snp$Position[snp$Position>from&snp$Position<to]
+        posLD <- pos[pos%in%union(ld@data@data$posA,ld@data@data$posB)]
+        pvals <- snp$p[snp$Position>from&snp$Position<to]
+        pvalsLD <- pvals[which(pos%in%posLD)]
         
         # Internal copy.
-        ldInternal<-ld@data@data[ld@data@data$posB==tgt_snp,]
+        ldInternal <- ld@data@data[ld@data@data$posB==tgt_snp,]
         rownames(ldInternal) <- ldInternal$posA
         ldInternal <- ldInternal[as.character(posLD),]
-        posLD <- posLD[order(ldInternal$R2,decreasing = F)]
-        pvalsLD <- pvalsLD[order(ldInternal$R2,decreasing = F)]
-        ldInternal <- ldInternal[order(ldInternal$R2,decreasing = F),]
+        posLD <- posLD[order(ldInternal$R2, decreasing = F)]
+        pvalsLD <- pvalsLD[order(ldInternal$R2, decreasing = F)]
+        ldInternal <- ldInternal[order(ldInternal$R2, decreasing = F),]
         
         lzcolors<-rev(c("#D43F3AFF", "#EEA236FF", "#5CB85CFF", "#46B8DAFF", "#357EBDFF"))
         
-        par(mar=c(5,5,2,5))
-        plot(gmap[[tgt_chr]][gmap[[tgt_chr]]$position>from&gmap[[tgt_chr]]$position<to,c(1,2)],type="l",col="blue",ylim=c(0,100),xaxs="i",yaxs="i",axes=F, xlab=NA, ylab=NA)
+        # Generate background plot.
+        args2 <- list(type = "l", col = "blue", ylim = c(0, 100))
+        args2 <- c(args2, args1)
+        x_gmap <- gmap[[tgt_chr]][gmap[[tgt_chr]]$position>from & gmap[[tgt_chr]]$position<to, 1]
+        y_gmap <- gmap[[tgt_chr]][gmap[[tgt_chr]]$position>from & gmap[[tgt_chr]]$position<to, 2]
+        #par(mar=c(5,5,2,5))
+        do.call("plot", c(y_gmap ~ x_gmap, args2))
+
+        #plot(gmap[[tgt_chr]][gmap[[tgt_chr]]$position>from & gmap[[tgt_chr]]$position<to,c(1,2)], type="l",col="blue",ylim=c(0,100), xlim=c(from, to), args1)
         axis(side=4,las=2,col="blue",col.axis="blue")
         mtext(side = 4, line = 3, "Recombination rate (cm/Mb)",col = "blue")
         par(new = T)
-        plot(pos[which(!pos%in%posLD)],pvals[which(!pos%in%posLD)],pch=20,cex=.9,col="#B8B8B8FF",xaxs="i",yaxs="i",las=2,ylab="-log10(P)",xlab="Position",ylim=c(0, round(max(pvals)+5,-1)))
-        points(posLD,pvalsLD,pch=21,cex=1,bg=lzcolors[as.numeric(cut(ldInternal$R2,breaks = seq(0,1,length.out = 6),right = T))])
+        # Add plot.
+        args2 <- list(cex=.9, col="#B8B8B8FF", xaxs="i", yaxs="i", las=2, ylab="-log10(P)", xlab=NA, xaxt = "n", ylim=c(0, round(max(pvals)+5,-1)))
+        args2 <- c(args2, args1[!names(args1)%in%names(args2)]) # do not include labels defined specifically for args2
+        args2[["yaxt"]] <- NULL
+        args2[["axes"]] <- NULL
+        if(is.null(args2$pch)) args2$pch <- 21
+        x_pval <- pos[which(!pos%in%posLD)]
+        y_pval <- pvals[which(!pos%in%posLD)]
+        do.call("plot", c(y_pval ~ x_pval, args2))
+        #plot(pos[which(!pos%in%posLD)], pvals[which(!pos%in%posLD)])
+        points(posLD, pvalsLD, pch = args2$pch, cex = 1, bg = lzcolors[as.numeric(cut(ldInternal$R2, breaks = seq(0,1,length.out = 6), right = TRUE))])
         points(tgt_snp, snp[snp$Position==tgt_snp,"p"], pch=24, bg="#9632B8FF",cex=1.2)
-        suppressWarnings(rug(pos,side=3,ticksize = -0.03))
-        legend("topright",fill = c(rev(lzcolors),"#B8B8B8FF"), legend = c("0.8-1.0","0.6-0.8","0.4-0.6","0.2-0.4","0.0-0.2","NA"),y.intersp = 0.5,cex = 1.3, title=expression("LD "  ~ R^2))
-        text(x=from+((to-from)/2),y=round(max(pvals)+5,-1)-3,labels = tgt_snp)
+        suppressWarnings(rug(pos, side=3, ticksize = -0.03))
+        legend("topright", 
+               fill = c(rev(lzcolors), "#B8B8B8FF"), 
+               legend = sprintf("%s:%s", 
+                                c("0.8-1.0","0.6-0.8","0.4-0.6","0.2-0.4","0.0-0.2","NA"),
+                                c(nrow(ld@data@data[ld@data@data$R2>0.8 & ld@data@data$R2<=1.0,]),
+                                  nrow(ld@data@data[ld@data@data$R2>0.6 & ld@data@data$R2<=0.8,]),
+                                  nrow(ld@data@data[ld@data@data$R2>0.4 & ld@data@data$R2<=0.6,]),
+                                  nrow(ld@data@data[ld@data@data$R2>0.2 & ld@data@data$R2<=0.4,]),
+                                  nrow(ld@data@data[ld@data@data$R2>0 & ld@data@data$R2<=0.2,]),
+                                  0)), 
+               y.intersp = 0.5, 
+               cex = 1.2,
+               bty = "n", 
+               title=expression("LD "  ~ R^2))
+        text(x= from + ((to - from) / 2), y=round(max(pvals) + 5, -1) - 3, labels = tgt_snp)
+        # Add x-axis.
+        if(custom_xaxt == FALSE) rtomahawk:::addGenomicAxis(args1$xlim, 1, 1)
+        if(custom_xlab == FALSE) mtext(side = 1, line = 3, "Position")
 
         return(ld)
     }
@@ -1241,7 +1452,7 @@ setMethod("plotLZ",
         
         lzcolors<-rev(c("#D43F3AFF", "#EEA236FF", "#5CB85CFF", "#46B8DAFF", "#357EBDFF"))
         
-        par(mar=c(5,5,2,5))
+        #par(mar=c(5,5,2,5))
         plot(gmap[[tgt_chr]][gmap[[tgt_chr]]$position>from&gmap[[tgt_chr]]$position<to,c(1,2)],type="l",col="blue",ylim=c(0,100),xaxs="i",yaxs="i",axes=F, xlab=NA, ylab=NA)
         axis(side=4,las=2,col="blue",col.axis="blue")
         mtext(side = 4, line = 3, "Recombination rate (cm/Mb)",col = "blue")
@@ -1351,8 +1562,8 @@ setMethod("show",
 #' # Assuming you have a file called "test.two" in your downloads directory.
 #' twk<-openTomahawkOutput("~/Downloads/test.two")
 #' agg <- aggregateOutput(twk, "r2" ,"count", 1000, 1000, 50, verbose = T, threads = 4)
-#' plot(agg, normalized = TRUE)
-#' plot(agg, normalized = FALSE)
+#' plot(agg, normalize = TRUE)
+#' plot(agg, normalize = FALSE)
 #' agg
 setGeneric("aggregate", 
     function(x="twk", 
@@ -1415,6 +1626,10 @@ setMethod("aggregate",
 #'    computed information that is returned from the underlying 
 #'    \code{.Call} to Tomahawk. Note that no data is stored in
 #'    this object in this case.
+#' @param normalize Logical flag indicating if the colour scheme
+#'    should be quantile normalized to even out the ranges.
+#' @param annote Logical flag indicating if titles and axes should
+#'    should be added.
 #'
 #' @seealso \code{\link{twk_data}}, \code{\link{twk_header}}, 
 #' \code{\link{twk_filter}}, and \code{\link{twk}}
@@ -1428,41 +1643,60 @@ setMethod("aggregate",
 #' plot(x,normalized=TRUE)
 #' plot(x,normalized=FALSE)
 #' x
-setGeneric("plotAggregation", function(x="twk_agg", normalize="logical", ...) standardGeneric("plotAggregation"))
+setGeneric("plotAggregation", function(x="twk_agg", colors = "character", normalize="logical", annotate = "logical", legend = "logical", ...) standardGeneric("plotAggregation"))
 setMethod("plotAggregation",
     signature(x="twk_agg"),
-    definition = function(x, normalize = TRUE, ...){
+    definition = function(x, colors = viridis(11), normalize = TRUE, annotate = TRUE, legend = TRUE, ...){
         if(length(x@data) == 0)
             stop("no data available")
 
-        curpar <- par()
-        
-        # Viridis colors.
-        colors <- c("#440154FF","#482576FF","#414487FF",
-                    "#35608DFF","#2A788EFF","#21908CFF",
-                    "#22A884FF","#43BF71FF","#7AD151FF",
-                    "#BBDF27FF","#FDE725FF")
-
-        args1 <- list(colors = colors, mar = c(0,0,0,0), color_range = 11)
+        args1 <- list(colors = colors)
         inargs <- list(...)
         args1[names(inargs)] <- inargs
         
         # Normalize
         dist <- table(x@data[x@data > 0])
         cumdist <- cumsum(dist) / sum(dist)
-        col_breaks <- rep(0, args1$color_range - 1)
-        for(j in 1:(args1$color_range - 1)){
+        col_breaks <- rep(0, length(args1$colors) - 1)
+        for(j in 1:(length(args1$colors) - 1)){
             # Compute 10-percentile bins using the nearest-rank method
-            col_breaks[j] = as.numeric(names(cumdist)[which.max(cumdist >= (min(cumdist) + ((max(cumdist) - min(cumdist)) / (args1$color_range) * j)))])
+            col_breaks[j] = as.numeric(names(cumdist)[which.max(cumdist >= (min(cumdist) + ((max(cumdist) - min(cumdist)) / (length(args1$colors)) * j)))])
         }
         
-        par(mar = args1$mar)
-        if(normalize)
+        if(normalize){
             image(x@data, useRaster = T, axes=F, xaxt='n', yaxt='n', ann=FALSE, bty="n", col=args1$colors, breaks=c(0, col_breaks, max(x@data)))
-        else
+            for(i in 1:5){
+                legend_labels <- round(col_breaks,i)
+                if(any(duplicated(legend_labels)) == FALSE) break
+            }
+            if(legend) legend("topleft", legend = legend_labels, fill = args1$colors, inset=c(1,0), xpd=TRUE, bty="n", y.intersp=0.7, title = expression(bold("Color key")))
+        }
+        else {
             image(x@data, useRaster = T, axes=F, xaxt='n', yaxt='n', ann=FALSE, bty="n", col=args1$colors)
+            for(i in 1:5){
+                legend_labels <- round(max(x@data)/(length(args1$colors):1),i)
+                if(any(duplicated(legend_labels)) == FALSE) break
+            }
+            if(legend) legend("topleft", legend = legend_labels, fill = args1$colors, inset=c(1,0), xpd=TRUE, bty="n", y.intersp=0.7, title = expression(bold("Color key")))
+        }
 
-        suppressWarnings(par(curpar))
+        valid_ranges <- x@offsets[x@offsets$max!=0,]
+        if(nrow(valid_ranges) == 1){
+            from <- valid_ranges$min
+            to <- valid_ranges$max
+        }
+
+        # Todo: fix case when passing axes=FALSE or xaxt="n" or yaxt="n"
+        if(annotate){
+            rtomahawk:::addGenomicAxis(c(from, to), 1, 1, scaleMax = TRUE)
+            mtext(side = 1, line = 3, "Position (from)")
+            rtomahawk:::addGenomicAxis(c(from, to), 2, 2, scaleMax = TRUE)
+            mtext(side = 2, line = 3, "Position (to)")
+            if(is.null(args1$main)){
+                title("Aggregated linkage-disequilibrium", adj=0)
+                mtext(sprintf("Points in view: %s", x@n_original),adj=0,cex=1)
+            }
+        }
     }
 )
 
