@@ -21,6 +21,10 @@
     .Call(`_rtomahawk_twk_version`)
 }
 
+.twk_import <- function(input, output, missingness = 0.95, block_size = 500L, c_level = 1L, filter_univariate = TRUE) {
+    .Call(`_rtomahawk_twk_import`, input, output, missingness, block_size, c_level, filter_univariate)
+}
+
 .twk_head <- function(obj, n_records) {
     .Call(`_rtomahawk_twk_head`, obj, n_records)
 }

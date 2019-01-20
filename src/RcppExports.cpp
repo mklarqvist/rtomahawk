@@ -59,6 +59,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// twk_import
+Rcpp::S4 twk_import(std::string& input, std::string& output, double missingness, int32_t block_size, int32_t c_level, bool filter_univariate);
+RcppExport SEXP _rtomahawk_twk_import(SEXP inputSEXP, SEXP outputSEXP, SEXP missingnessSEXP, SEXP block_sizeSEXP, SEXP c_levelSEXP, SEXP filter_univariateSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string& >::type input(inputSEXP);
+    Rcpp::traits::input_parameter< std::string& >::type output(outputSEXP);
+    Rcpp::traits::input_parameter< double >::type missingness(missingnessSEXP);
+    Rcpp::traits::input_parameter< int32_t >::type block_size(block_sizeSEXP);
+    Rcpp::traits::input_parameter< int32_t >::type c_level(c_levelSEXP);
+    Rcpp::traits::input_parameter< bool >::type filter_univariate(filter_univariateSEXP);
+    rcpp_result_gen = Rcpp::wrap(twk_import(input, output, missingness, block_size, c_level, filter_univariate));
+    return rcpp_result_gen;
+END_RCPP
+}
 // twk_head
 Rcpp::DataFrame twk_head(Rcpp::S4& obj, uint32_t n_records);
 RcppExport SEXP _rtomahawk_twk_head(SEXP objSEXP, SEXP n_recordsSEXP) {
@@ -189,6 +205,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rtomahawk_CheckIntervalContigRange", (DL_FUNC) &_rtomahawk_CheckIntervalContigRange, 1},
     {"_rtomahawk_CheckInterval", (DL_FUNC) &_rtomahawk_CheckInterval, 1},
     {"_rtomahawk_twk_version", (DL_FUNC) &_rtomahawk_twk_version, 0},
+    {"_rtomahawk_twk_import", (DL_FUNC) &_rtomahawk_twk_import, 6},
     {"_rtomahawk_twk_head", (DL_FUNC) &_rtomahawk_twk_head, 2},
     {"_rtomahawk_twk_tail", (DL_FUNC) &_rtomahawk_twk_tail, 2},
     {"_rtomahawk_OpenTomahawkOutput", (DL_FUNC) &_rtomahawk_OpenTomahawkOutput, 1},

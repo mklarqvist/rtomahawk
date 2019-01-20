@@ -6,7 +6,7 @@
 \usage{
 aggregate(x = "twk", aggregation = "character",
   reduction = "character", xbins = "numeric", ybins = "numeric",
-  minCount = "numeric", n_threads = "numeric", verbose = "logical",
+  minCount = "numeric", threads = "numeric", verbose = "logical",
   progress = "logical", ...)
 }
 \arguments{
@@ -24,14 +24,14 @@ after data has been aggregated.}
 
 \item{minCount}{Only pixels with at least this many observations are reported.}
 
+\item{threads}{Number of aggregation/reduction threads to use.}
+
 \item{verbose}{Flag triggering verbose output (written to std::cerr). This
 will usually, but not always, be appropriately handled by R.}
 
 \item{progress}{This flag will trigger a detached thread internal to Tomahawk
 that will tick progression every 30 seconds to the console. Note that R
 NEVER cleans up this thread and it will tick until the R instance is closed.}
-
-\item{threads}{Number of aggregation/reduction threads to use.}
 }
 \value{
 Returns a \code{\link{twk_agg}} object with the aggregated matrix.
@@ -46,8 +46,8 @@ description section.
 # Assuming you have a file called "test.two" in your downloads directory.
 twk<-openTomahawkOutput("~/Downloads/test.two")
 agg <- aggregateOutput(twk, "r2" ,"count", 1000, 1000, 50, verbose = T, threads = 4)
-plot(agg, normalized = TRUE)
-plot(agg, normalized = FALSE)
+plot(agg, normalize = TRUE)
+plot(agg, normalize = FALSE)
 agg
 }
 \seealso{

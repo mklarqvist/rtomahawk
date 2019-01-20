@@ -8,6 +8,7 @@
 #include "utility.h"
 #include "two_reader.h"
 #include "ld.h"
+#include "importer.h"
 
 // [[Rcpp::export(name=".checkIntervalContig")]]
 bool CheckIntervalContig(const std::string& interval){
@@ -116,6 +117,39 @@ public:
 // [[Rcpp::export(name=".twk_version")]]
 std::string twk_version(){
     return(tomahawk::LibrariesString());
+}
+
+// [[Rcpp::export(name=".twk_import")]]
+Rcpp::S4 twk_import(std::string& input, std::string& output, double missingness = 0.95, int32_t block_size = 500, int32_t c_level = 1, bool filter_univariate = true){
+    if(input.size() == 0) Rcpp::stop("no input path provided");
+    if(output.size() == 0) Rcpp::stop("no output path provided");
+    if(missingness < 0 || missingness > 1) Rcpp::stop("missingness must be in range [0,1]");
+    if(block_size < 2) Rcpp::stop("block_size must be > 1");
+    if(c_level < 1) Rcpp::stop("compression level must be > 0");
+    
+    // Make use of R internal function path.expand() to expand out
+    // a relative path into an absolute path as required by the API.
+    Rcpp::Function f("path.expand");
+    std::string inreal = Rcpp::as<std::string>(f(input));
+    std::string outreal = Rcpp::as<std::string>(f(output));
+
+    tomahawk::twk_vimport_settings settings;
+    settings.input = inreal;
+    settings.output = outreal;
+    settings.threshold_miss = missingness;
+    settings.block_size = block_size;
+    settings.c_level = c_level;
+    settings.remove_univariate = filter_univariate;
+
+    tomahawk::twk_variant_importer importer;
+    if(importer.Import(settings) == false)
+		Rcpp::stop("failed import");
+
+    Rcpp::Language twk_type("new", "twk");
+    Rcpp::S4 twk( twk_type.eval() ); //use Rcpp::Language to create and assign a twk_header S4 object.
+    twk.slot("file.path") = settings.output;
+
+	return(twk);
 }
 
 // [[Rcpp::export(name=".twk_head")]]

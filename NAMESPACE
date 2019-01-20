@@ -3,6 +3,8 @@
 export(aggregate)
 export(calculateLDSingle)
 export(cividis)
+export(displayColors)
+export(import)
 export(inferno)
 export(magma)
 export(openTomahawkOutput)

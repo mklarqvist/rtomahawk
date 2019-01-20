@@ -107,6 +107,55 @@ magma <- function(n, alpha = 1, begin = 0, end = 1, direction = 1)
     return(rtomahawk:::twk_color_mapper("magma", n, alpha, begin, end, direction))
 }
 
+#' Displays the color schemes available in rtomahawk
+#'
+#' Some additional details about this S4 generic and its methods.
+#' The extra blank line between this section and the title is
+#' critical for roxygen2 to differentiate the title from the
+#' description section.
+#'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#' 
+#' @export
+#' @examples
+#' displayColors()
+displayColors <- function(){
+    cur_par <- par()
+    par(mar=c(1,1,1,1),mfrow=c(1,2))
+    # 100 steps
+    plot(-100,-100,xlim=c(0,101),ylim=c(0,450),axes=F,xlab="",ylab="",main="Gradient")
+    for(i in 0:100) rect(xleft = i, ybottom = 0, xright = i+1,ytop = 50,col = colorRampPalette(c("red","blue"))(100)[i],border=NA)
+    for(i in 0:100) rect(xleft = i, ybottom = 75, xright = i+1,ytop = 125,col = cividis(100)[i],border=NA)
+    for(i in 0:100) rect(xleft = i, ybottom = 150, xright = i+1,ytop = 200,col = inferno(100)[i],border=NA)
+    for(i in 0:100) rect(xleft = i, ybottom = 225, xright = i+1,ytop = 275,col = magma(100)[i],border=NA)
+    for(i in 0:100) rect(xleft = i, ybottom = 300, xright = i+1,ytop = 350,col = plasma(100)[i],border=NA)
+    for(i in 0:100) rect(xleft = i, ybottom = 375, xright = i+1,ytop = 425,col = viridis(100)[i],border=NA)
+    text(x = 50, y = 50+10, labels = "default")
+    text(x = 50, y = 125+10, labels = "cividis")
+    text(x = 50, y = 200+10, labels = "inferno")
+    text(x = 50, y = 275+10, labels = "magma")
+    text(x = 50, y = 350+10, labels = "plasma")
+    text(x = 50, y = 425+10, labels = "viridis")
+
+    # 11 steps
+    plot(-100,-100,xlim=c(0,12),ylim=c(0,450),axes=F,xlab="",ylab="",main="Default: 11 steps")
+    for(i in 0:11) rect(xleft = i, ybottom = 0, xright = i+1,ytop = 50,col = colorRampPalette(c("red","blue"))(11)[i],border=NA)
+    for(i in 0:11) rect(xleft = i, ybottom = 75, xright = i+1,ytop = 125,col = cividis(11)[i],border=NA)
+    for(i in 0:11) rect(xleft = i, ybottom = 150, xright = i+1,ytop = 200,col = inferno(11)[i],border=NA)
+    for(i in 0:11) rect(xleft = i, ybottom = 225, xright = i+1,ytop = 275,col = magma(11)[i],border=NA)
+    for(i in 0:11) rect(xleft = i, ybottom = 300, xright = i+1,ytop = 350,col = plasma(11)[i],border=NA)
+    for(i in 0:11) rect(xleft = i, ybottom = 375, xright = i+1,ytop = 425,col = viridis(11)[i],border=NA)
+    text(x = 6, y = 50+10, labels = "default")
+    text(x = 6, y = 125+10, labels = "cividis")
+    text(x = 6, y = 200+10, labels = "inferno")
+    text(x = 6, y = 275+10, labels = "magma")
+    text(x = 6, y = 350+10, labels = "plasma")
+    text(x = 6, y = 425+10, labels = "viridis")
+    suppressWarnings(par(cur_par))
+}
+
+
 # Support --------------------------
 
 #' Print Tomahawk version string
@@ -598,6 +647,63 @@ setMethod("dim",
     definition = function(x){
         if(nrow(x@data@data) == 0) return(c(0,0))
         return(dim(x@data@data))
+    }
+)
+
+# Import --------------------------
+
+#' Imports a htslib-compatible variant-call file into Tomahawk
+#'
+#' Some additional details about this S4 generic and its methods.
+#' The extra blank line between this section and the title is
+#' critical for roxygen2 to differentiate the title from the
+#' description section.
+#'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
+#' @param input Input string pointing to the htslib-compatible file.
+#' @param output Output string pointing to the Tomahawk file.
+#' @param missnigness Numerical value in the range [0, 1] representing the
+#'    largest fraction of missing values that are allowed. If the threshold is
+#'    violated then the variant site is filtered out.
+#' @param block_size Advanced use: number of variants packed in each internal Tomahawk
+#'    block. This could have potential impact on the parallel throughput capabilities
+#'    of Tomahawk on large cohorts.
+#' @param compression_level Compressing level in the range [1, 22] for compressing the
+#'    Tomahawk file. Larger numbers results in smaller resting file size at the expense
+#'    of importing speeds. Decompressing speeds are largely unaffected by the compression 
+#'    level.
+#' @param filter_univariate Logical (boolean) flag set to \code{TRUE} if univariate (monomorphic)
+#'    should be filtered out. If this flag is set to \code{FALSE} then monomorphic sites
+#'    are left in the file. The recommendation is to remove these as they contribute no
+#'    information.
+#'
+#' @return Returns a \code{twk} class with the file handle pointing to the newly imported
+#'    Tomahawk file.
+#'
+#' @seealso \code{\link{twk_data}}, \code{\link{twk_header}}, 
+#' \code{\link{twk_filter}}, and \code{\link{twk}}
+#' 
+#' @export
+#' @useDynLib rtomahawk, .registration = TRUE 
+#' @importFrom Rcpp evalCpp
+#' @examples
+#' # This example assumes you have a Tomahawk file called "1kgp3_chr20.bcf" in
+#' # your current working directory.
+#' twk <- import("1kgp3_chr20.bcf","~/Downloads/1kgp3_chr20")
+#' twk
+setGeneric("import", function(input="character", output="character", missingness = "numeric", block_size = "integer", compression_level = "integer", filter_univariate = "logical", ...){ standardGeneric("import") })
+setMethod("import",
+    signature(input="character"),
+    definition = function(input, output, missingness = 0.95, block_size = 500, compression_level = 1, filter_univariate = TRUE, ...){
+        if(nchar(input) == 0) stop("no input provided")
+        if(nchar(output) == 0) stop("no output provided")
+        if(missingness < 0 || missingness > 1) stop("missingness must be in range [0,1]")
+        if(block_size < 2) stop("block_size must be > 1")
+        if(compression_level < 1) stop("compressing level must be > 0")
+
+        return(rtomahawk:::.twk_import(input, output, missingness, block_size, compression_level, filter_univariate));
     }
 )
 
@@ -1572,7 +1678,7 @@ setGeneric("aggregate",
              xbins = "numeric", 
              ybins = "numeric", 
              minCount = "numeric", 
-             n_threads = "numeric", 
+             threads = "numeric", 
              verbose = "logical", 
              progress = "logical", ...)
     { 
@@ -1582,14 +1688,14 @@ setGeneric("aggregate",
 
 setMethod("aggregate",
     signature(x="twk"),
-    definition = function(x, aggregation = "r2", reduction = "count", xbins = 1000, ybins = 1000, minCount = 0, n_threads = 1, verbose = FALSE, progress = FALSE, ...){
+    definition = function(x, aggregation = "r2", reduction = "count", xbins = 1000, ybins = 1000, minCount = 0, threads = 1, verbose = FALSE, progress = FALSE, ...){
         args1 <- list(x = x, 
                       aggregation = aggregation, 
                       reduction = reduction, 
                       xbins = xbins, 
                       ybins = ybins, 
                       minCount = minCount, 
-                      n_threads = n_threads, 
+                      n_threads = threads, 
                       verbose = verbose, 
                       progress = progress)
 
