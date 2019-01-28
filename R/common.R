@@ -190,6 +190,61 @@ setMethod("tomahawkVersion",
     }
 )
 
+#' Plots a cytoband
+#'
+#' Some additional details about this S4 generic and its methods.
+#' The extra blank line between this section and the title is
+#' critical for roxygen2 to differentiate the title from the
+#' description section.
+#'
+#' @author Marcus D. R. Klarqvist <\email{mk819@@cam.ac.uk}> |
+#' <\href{https://mdrk.me}{https://mdrk.me}>
+#'
+#' @param chr Target chromosome name.
+#' @param release Target release name. Currently supported values are "hg19" and "hg38".
+#' @param zoom Tuple (from,to) for a region to highlight.
+#'
+#' @export
+#' @examples
+#' plotCytoband("chr6", "hg19")
+#' plotCytoband("chr6", "hg19", zoom = c(10e6,20e6))
+plotCytoband <- function(chr, release = "hg19", zoom = NULL){
+    if(class(chr) != "character") stop("chr must be a string")
+    if(class(release) != "character") stop("release must be a string")
+    if(!chr %in% cytobands$chr) stop("chr does not exist in set")
+    if(!release %in% cytobands$release) stop("release not provided")
+    has_valid_zoom <- FALSE
+    if(!is.null(zoom)){
+        if(class(zoom) != "numeric") stop("zoom has to be numeric")
+        if(length(zoom) != 2) stop("zoom has to have two values (from,to)")
+        has_valid_zoom <- TRUE
+    }
+    
+    c1 <- cytobands[cytobands$chr==chr & cytobands$release == release,]
+    plot(-100,-100,ylim=c(0,1),xlim=c(0, max(c1$to)), xlab="", xaxt="n", ylab="", yaxt="n", xaxs="i", yaxs="i", bty="n")
+    
+    # Colour scheme from circos.
+    color.table <- c(gneg   = "#FFFFFF", gpos25  = "#C8C8C8", 
+                     gpos33 = "#D2D2D2", gpos50  = "#C8C8C8", gpos66 = "#A0A0A0", 
+                     gpos75 = "#828282", gpos100 = "#000000", gpos   = "#000000", 
+                     stalk  = "#647FA4", acen    = "#D92F27", gvar   = "#DCDCDC")
+    
+    acen <- c1[c1$stain=="acen",]
+    c1 <-c1[c1$stain!="acen",]
+    
+    for(i in 1:nrow(c1)){
+        rect(xleft = c1$from[i], ybottom = 0.1, xright = c1$to[i], ytop = 0.9, col = color.table[c1$stain[i]])
+    }
+    
+    # Add special triangular polygon to indicate the centromere.
+    polygon(x = c(acen$from[1],acen$to[1],acen$from[1]), y = c(0.9,0.45,0.1), col="red")
+    polygon(x = c(acen$to[2],acen$from[2],acen$to[2]), y = c(0.9,0.45,0.1), col="red")
+    mtext(chr,side=2,las=2,cex=.8)
+    
+    if(has_valid_zoom) rect(zoom[1],0,zoom[2],1,col=rgb(colorRamp("yellow")(1)/255,alpha=0.7))
+}
+
+
 # Classes ------------------------------------
 
 #' Tomahawk output data class
