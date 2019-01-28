@@ -1,7 +1,8 @@
 [![Release](https://img.shields.io/badge/Release-beta_0.1.0-blue.svg?logo=R&logoColor=white)](https://github.com/mklarqvist/rtomahawk/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/mklarqvist/rtomahawk/blob/master/LICENSE)
-[![Docs](https://img.shields.io/badge/Docs-Available-green.svg)](https://mklarqvist.github.io/tomahawk/r-tutorial/)
+[![Docs](https://img.shields.io/badge/Docs-Available-brightgreen.svg)](https://mklarqvist.github.io/tomahawk/r-tutorial/)
 
+![screenshot](rtomahawk.png)
 # rtomahawk
 
 This package provides native R-bindings for interfacing with
@@ -18,6 +19,12 @@ flexibility of the C++ API while not sacrificing the usability that R provides.
 ## Get started
 
 * Read the [documentation](https://mklarqvist.github.io/tomahawk/r-tutorial/)
+
+## Requirements
+
+* Your processor should support SSE4.2 (It is supported by most Intel and AMD processors released since 2008.)
+* C++11 compliant compiler (GCC is assumed)
+* A Linux-like distribution is assumed by the makefile
 
 ## Installation
 For Ubuntu, Debian, and Mac systems, installation is easy: just run

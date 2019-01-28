@@ -1869,7 +1869,7 @@ setMethod("plotAggregation",
         }
         
         if(normalize){
-            image(x@data, useRaster = T, axes=F, xaxt='n', yaxt='n', ann=FALSE, bty="n", col=args1$colors, breaks=c(0, col_breaks, max(x@data)))
+            image(x@data, useRaster = TRUE, axes=FALSE, xaxt='n', yaxt='n', ann=FALSE, bty="n", col=args1$colors, breaks=c(0, col_breaks, max(x@data)))
             for(i in 1:5){
                 legend_labels <- round(col_breaks,i)
                 if(any(duplicated(legend_labels)) == FALSE) break
@@ -1877,7 +1877,7 @@ setMethod("plotAggregation",
             if(legend) legend("topleft", legend = legend_labels, fill = args1$colors, inset=c(1,0), xpd=TRUE, bty="n", y.intersp=0.7, title = expression(bold("Color key")))
         }
         else {
-            image(x@data, useRaster = T, axes=F, xaxt='n', yaxt='n', ann=FALSE, bty="n", col=args1$colors)
+            image(x@data, useRaster = TRUE, axes=FALSE, xaxt='n', yaxt='n', ann=FALSE, bty="n", col=args1$colors)
             for(i in 1:5){
                 legend_labels <- round(max(x@data)/(length(args1$colors):1),i)
                 if(any(duplicated(legend_labels)) == FALSE) break

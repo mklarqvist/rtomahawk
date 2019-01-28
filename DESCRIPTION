@@ -9,7 +9,7 @@ Description: Tomahawk is a unified framework for computing, storing, querying, a
 License: MIT
 URL: https://github.com/mklarqvist/tomahawk
 BugReports: https://github.com/mklarqvist/tomahawk/issues
-biocViews: Software
+biocViews: Visualization, StatisticalMethod, Genetics, DataImport, LinkageDisequilibrium 
 Imports: 
 	Rcpp (>= 1.0.0),
 	GenomicRanges
