@@ -1885,7 +1885,7 @@ setMethod("plotAggregation",
             if(legend) legend("topleft", legend = legend_labels, fill = args1$colors, inset=c(1,0), xpd=TRUE, bty="n", y.intersp=0.7, title = expression(bold("Color key")))
         }
 
-        valid_ranges <- x@offsets[x@offsets$max!=0,]
+        valid_ranges <- x@offsets[x@offsets$max!=4294967295,]
         if(nrow(valid_ranges) == 1){
             from <- valid_ranges$min
             to <- valid_ranges$max
@@ -1893,10 +1893,15 @@ setMethod("plotAggregation",
 
         # Todo: fix case when passing axes=FALSE or xaxt="n" or yaxt="n"
         if(annotate){
-            rtomahawk:::addGenomicAxis(c(from, to), 1, 1, scaleMax = TRUE)
-            mtext(side = 1, line = 3, "Position (from)")
-            rtomahawk:::addGenomicAxis(c(from, to), 2, 2, scaleMax = TRUE)
-            mtext(side = 2, line = 3, "Position (to)")
+            if(!is.null(from)){
+                rtomahawk:::addGenomicAxis(c(from, to), 1, 1, scaleMax = TRUE)
+                mtext(side = 1, line = 3, "Position (from)")
+            }
+            if(!is.null(to)){
+                rtomahawk:::addGenomicAxis(c(from, to), 2, 2, scaleMax = TRUE)
+                mtext(side = 2, line = 3, "Position (to)")
+            }
+
             if(is.null(args1$main)){
                 title("Aggregated linkage-disequilibrium", adj=0)
                 mtext(sprintf("Points in view: %s", x@n_original),adj=0,cex=1)
