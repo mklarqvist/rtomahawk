@@ -32,7 +32,7 @@ CFLAGS        = -std=c99
 CFLAGS_VENDOR = -std=c99
 
 RCPP_CXXFLAGS := $(shell echo `$(R_HOME)/bin/Rscript -e "Rcpp:::CxxFlags()"`)
-RCPP_LDFLAGS := $(shell echo `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"'`) -ltomahawk
+RCPP_LDFLAGS := $(shell echo `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"`) -ltomahawk
 R_PATH := $(shell echo `$(R_HOME)/bin/Rscript -e "cat(R.home('include'))"`)
 
 PKG_CPPFLAGS := $(RCPP_CXXFLAGS) -I$(R_PATH) -I$(abspath ./tomahawk/include) -I$(abspath ./tomahawk/lib)
@@ -72,6 +72,7 @@ all: zstd htslib twk $(OBJECTS)
 	cp -P htslib/libhts.so.* .
 	cp zstd/lib/libzstd.so.$(ZSTD_LIBVER) .
 	cp -P zstd/lib/libzstd.so .
+	ln -sf libzstd.so libzstd.so.1
 	mkdir -p "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
 	mkdir -p "${R_PACKAGE_DIR}/include/htslib"
 	mkdir -p "${R_PACKAGE_DIR}/include/zstd"
@@ -94,7 +95,7 @@ htslib:
 	cd htslib && $(MAKE) && cd ..
 
 twk:
-	cd tomahawk && $(MAKE) library library=true && cd ..
+	cd tomahawk && $(MAKE) library library=true origin=true && cd ..
 	
 clean:
 	rm -f *.so *.so.* $(OBJECTS) $(CPP_DEPS) $(SHLIB)

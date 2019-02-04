@@ -30,7 +30,16 @@ flexibility of the C++ API while not sacrificing the usability that R provides.
 For Ubuntu, Debian, and Mac systems, installation is easy: just run
 ```bash
 git clone --recursive https://github.com/mklarqvist/rtomahawk
-R CMD INSTALL --with-keep.source rtomahawk
+R CMD INSTALL rtomahawk
+```
+or in `R`
+```R
+install.packages(path_to_rtomahawk, repos = NULL, type="source")
+```
+or alternatively
+```R
+library(devtools)
+install_github("mklarqvist/rtomahawk")
 ```
 
 Check that the package can be loaded and list the built libraries (in `R`):
