@@ -804,14 +804,14 @@ addGenomicAxis <- function(limit, at = 1, las1 = 1, scaleMax = FALSE){
         else tick_labels <- paste0(tick_pos/1e3,"Kb")
         
         if(!scaleMax) axis(at, at=tick_pos, labels=tick_labels, las = las1)
-        else axis(at, at=tick_pos/max(limit), labels=tick_labels, las = las1)
+        else axis(at, at=(tick_pos - limit[1])/max(limit[2] - limit[1]), labels=tick_labels, las = las1)
         
         if(!drop_lower) tick_pos_add <- seq(round(min(limit),-4),round(max(limit),-4), by = 1e3)
         else tick_pos_add <- seq(min(tick_pos), max(tick_pos), by = 100)
         
         tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
         if(!scaleMax) suppressWarnings(rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey"))
-        else suppressWarnings(rug(x = tick_pos_add / max(limit), ticksize = -0.02, side = at, col = "darkgrey"))
+        else suppressWarnings(rug(x = (tick_pos_add - limit[1])/max(limit[2] - limit[1]), ticksize = -0.02, side = at, col = "darkgrey"))
     }
     else if(abs(limit[2] - limit[1]) < 1e6){ 
         print("in < 1e6")
@@ -826,14 +826,14 @@ addGenomicAxis <- function(limit, at = 1, las1 = 1, scaleMax = FALSE){
         else tick_labels <- paste0(tick_pos/1e3,"Kb")
         
         if(!scaleMax) axis(at, at=tick_pos, labels=tick_labels, las = las1)
-        else axis(at, at=tick_pos/max(limit), labels=tick_labels, las = las1)
+        else axis(at, at=(tick_pos - limit[1])/max(limit[2] - limit[1]), labels=tick_labels, las = las1)
         
         if(!drop_lower) tick_pos_add <- seq(round(min(limit),-5),round(max(limit),-5), by = 10e3)
         else tick_pos_add <- seq(min(tick_pos), max(tick_pos), by = 1e3)
         
         tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
         if(!scaleMax) suppressWarnings(rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey"))
-        else suppressWarnings(rug(x = tick_pos_add / max(limit), ticksize = -0.02, side = at, col = "darkgrey"))
+        else suppressWarnings(rug(x = (tick_pos_add - limit[1])/max(limit[2] - limit[1]), ticksize = -0.02, side = at, col = "darkgrey"))
     }
     else if(abs(limit[2] - limit[1]) < 10e6){ 
         print("in < 10e6")
@@ -848,14 +848,14 @@ addGenomicAxis <- function(limit, at = 1, las1 = 1, scaleMax = FALSE){
         else tick_labels <- paste0(tick_pos/1e3,"Kb")
         
         if(!scaleMax) axis(at, at=tick_pos, labels=tick_labels, las = las1)
-        else axis(at, at=tick_pos/max(limit), labels=tick_labels, las = las1)
+        else axis(at, at=(tick_pos - limit[1])/max(limit[2] - limit[1]), labels=tick_labels, las = las1)
         
         if(!drop_lower) tick_pos_add <- seq(round(min(limit),-6),round(max(limit),-6), by = 100e3)
         else tick_pos_add <- seq(min(tick_pos), max(tick_pos), by = 10e3)
         
         tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
         if(!scaleMax) suppressWarnings(rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey"))
-        else suppressWarnings(rug(x = tick_pos_add / max(limit), ticksize = -0.02, side = at, col = "darkgrey"))
+        else suppressWarnings(rug(x = (tick_pos_add - limit[1])/max(limit[2] - limit[1]), ticksize = -0.02, side = at, col = "darkgrey"))
     }
     else if(abs(limit[2] - limit[1]) < 100e6){ 
         print("in < 100e6")
@@ -870,14 +870,14 @@ addGenomicAxis <- function(limit, at = 1, las1 = 1, scaleMax = FALSE){
         else tick_labels <- paste0(tick_pos/1e3,"Kb")
         
         if(!scaleMax) axis(at, at=tick_pos, labels=tick_labels, las = las1)
-        else axis(at, at=tick_pos/max(limit), labels=tick_labels, las = las1)
+        else axis(at, at=(tick_pos - limit[1])/max(limit[2] - limit[1]), labels=tick_labels, las = las1)
         
         if(!drop_lower) tick_pos_add <- seq(round(min(limit),-7),round(max(limit),-7), by = 1e6)
         else tick_pos_add <- seq(min(tick_pos), max(tick_pos), by = 100e3)
         
         tick_pos_add <- tick_pos_add[!tick_pos_add%in%tick_pos]
         if(!scaleMax) suppressWarnings(rug(x = tick_pos_add, ticksize = -0.02, side = at, col = "darkgrey"))
-        else suppressWarnings(rug(x = tick_pos_add / max(limit), ticksize = -0.02, side = at, col = "darkgrey"))
+        else suppressWarnings(rug(x = (tick_pos_add - limit[1])/max(limit[2] - limit[1]), ticksize = -0.02, side = at, col = "darkgrey"))
     }
 }
 
@@ -1885,7 +1885,7 @@ setMethod("plotAggregation",
             if(legend) legend("topleft", legend = legend_labels, fill = args1$colors, inset=c(1,0), xpd=TRUE, bty="n", y.intersp=0.7, title = expression(bold("Color key")))
         }
 
-        valid_ranges <- x@offsets[x@offsets$max!=4294967295,]
+        valid_ranges <- x@offsets[x@offsets$max!=0,]
         if(nrow(valid_ranges) == 1){
             from <- valid_ranges$min
             to <- valid_ranges$max

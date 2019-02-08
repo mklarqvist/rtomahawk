@@ -69,6 +69,7 @@ all: zstd htslib twk $(OBJECTS)
 	cp tomahawk/libtomahawk.so.$(TWK_LIBVER) .
 	cp -P tomahawk/libtomahawk.so .
 	cp htslib/libhts.so .
+	cp htslib/libhts.so.* .
 	cp -P htslib/libhts.so.* .
 	cp zstd/lib/libzstd.so.$(ZSTD_LIBVER) .
 	cp -P zstd/lib/libzstd.so .
