@@ -90,7 +90,7 @@ zstd:
 	cd zstd && $(MAKE) CC="${CC}" CXX="${CXX}" default && cd ..
 
 htslib:
-	cd htslib && $(MAKE) CC="${CC}" CXX="${CXX}" && cd ..
+	cd htslib && autoheader && autoconf && ./configure && $(MAKE) CC="${CC}" CXX="${CXX}" && cd ..
 
 twk:
 	cd tomahawk && $(MAKE) CC="${CC}" CXX="${CXX}" library library=true origin=true && cd ..
