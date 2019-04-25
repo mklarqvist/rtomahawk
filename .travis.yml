@@ -5,27 +5,161 @@ dist: trusty
 
 matrix:
   include:
-    # OSX begin
-    - os: osx
-      osx_image: xcode10
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
       env:
-        - MATRIX_EVAL="brew update && brew install gcc@5 && brew install r && CC=gcc-5 && CXX=g++-5"
+         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+      compiler: gcc
 
-    - os: osx
-      osx_image: xcode10
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
       env:
-        - MATRIX_EVAL="brew update && brew install gcc@6 && brew install r && CC=gcc-6 && CXX=g++-6"
+         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+      compiler: gcc
 
-    - os: osx
-      osx_image: xcode10
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
       env:
-        - MATRIX_EVAL="brew update && brew install gcc@7 && brew install r && CC=gcc-7 && CXX=g++-7"
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+      compiler: gcc
 
-    - os: osx
-      osx_image: xcode10
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
       env:
-        - MATRIX_EVAL="brew update && brew install gcc@8 && brew install r && CC=gcc-8 && CXX=g++-8"
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+      compiler: gcc
 
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-8
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+      compiler: gcc
+
+    # works on Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-6.0
+          packages:
+            - clang-6.0
+            - libstdc++-6-dev
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
+      env:
+        - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
+      compiler: clang
+
+    # works on Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-7
+          packages:
+            - clang-7
+            - libstdc++-7-dev
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
+      env:
+        - MATRIX_EVAL="CC=clang-7 && CXX=clang++-7"
+      compiler: clang
 
 before_install:
   - eval "${MATRIX_EVAL}"
@@ -34,7 +168,6 @@ before_install:
   - echo "CXX=${CXX}" >> ~/.R/Makevars
   - echo "CXX1X=${CXX} -std=c++0x" >> ~/.R/Makevars
   - echo "CXX11=${CXX} -std=c++0x" >> ~/.R/Makevars
-  - Rscript -e 'source("https://bioconductor.org/biocLite.R"); BiocInstaller::biocLite(c("GenomicFeatures"));'
 
 script:
   - git submodule update --recursive
