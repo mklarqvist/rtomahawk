@@ -24,7 +24,7 @@ matrix:
             - libbz2-dev
             - liblzma-dev
       env:
-         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9 && CXX1X=g++-4.9 && CXX11=g++-4.9"
+         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
       compiler: gcc
 
     # works on Precise and Trusty
@@ -45,7 +45,7 @@ matrix:
             - liblz-dev
             - libbz2-dev
       env:
-         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5 && CXX1X=g++-5 && CXX11=g++-5"
+         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
       compiler: gcc
 
     # works on Precise and Trusty
@@ -66,7 +66,7 @@ matrix:
             - liblz-dev
             - libbz2-dev
       env:
-        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6 && CXX1X=g++-6 && CXX11=g++-6"
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
       compiler: gcc
 
     # works on Precise and Trusty
@@ -88,7 +88,7 @@ matrix:
             - libbz2-dev
             - liblzma-dev
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CXX1X=g++-7 && CXX11=g++-7"
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
       compiler: gcc
 
     # works on Precise and Trusty
@@ -110,7 +110,7 @@ matrix:
             - libbz2-dev
             - liblzma-dev
       env:
-        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8 && CXX1X=g++-8 && CXX11=g++-8"
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
       compiler: gcc
       
     # works on Precise and Trusty
@@ -132,7 +132,7 @@ matrix:
             - liblz-dev
             - libbz2-dev
       env:
-        - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6 && CXX1X=clang++-3.6 && CXX11=clang++-3.6"
+        - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
       compiler: clang
 
     # works on Precise and Trusty
@@ -154,7 +154,7 @@ matrix:
             - liblz-dev
             - libbz2-dev
       env:
-        - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7 && CXX1X=clang++-3.7 && CXX11=clang++-3.7"
+        - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
       compiler: clang
 
     # works on Precise and Trusty
@@ -176,7 +176,7 @@ matrix:
             - liblz-dev
             - libbz2-dev
       env:
-        - MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8 && CXX1X=clang++-3.8 && CXX11=clang++-3.8"
+        - MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
       compiler: clang
 
     # works on Trusty
@@ -197,7 +197,7 @@ matrix:
             - liblz-dev
             - libbz2-dev
       env:
-        - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9 && CXX1X=clang++-3.9 && CXX11=clang++-3.9"
+        - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
       compiler: clang
 
     # works on Trusty
@@ -218,7 +218,7 @@ matrix:
             - liblz-dev
             - libbz2-dev
       env:
-        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0 && CXX1X=clang++-4.0 && CXX11=clang++-4.0"
+        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
       compiler: clang
 
     # works on Trusty
@@ -239,7 +239,7 @@ matrix:
             - liblz-dev
             - libbz2-dev
       env:
-        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0 && CXX1X=clang++-5.0 && CXX11=clang++-5.0"
+        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
       compiler: clang
 
     # works on Trusty
@@ -263,7 +263,7 @@ matrix:
             - libbz2-dev
             - liblzma-dev
       env:
-        - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0 && CXX1X=clang++-6.0 && CXX11=clang++-6.0"
+        - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
       compiler: clang
 
     # works on Trusty
@@ -287,29 +287,29 @@ matrix:
             - libbz2-dev
             - liblzma-dev
       env:
-        - MATRIX_EVAL="CC=clang-7 && CXX=clang++-7 && CXX1X=clang++-7 && CXX11=clang++-7"
+        - MATRIX_EVAL="CC=clang-7 && CXX=clang++-7"
       compiler: clang
 
     # OSX begin
     - os: osx
       osx_image: xcode10
       env:
-        - MATRIX_EVAL="brew update && brew install gcc@5 && CC=gcc-5 && CXX=g++-5 && CXX1X=g++-5 && CXX11=g++-5"
+        - MATRIX_EVAL="brew update && brew install gcc@5 && CC=gcc-5 && CXX=g++-5"
 
     - os: osx
       osx_image: xcode10
       env:
-        - MATRIX_EVAL="brew update && brew install gcc@6 && CC=gcc-6 && CXX=g++-6 && CXX1X=g++-6 && CXX11=g++-6"
+        - MATRIX_EVAL="brew update && brew install gcc@6 && CC=gcc-6 && CXX=g++-6"
 
     - os: osx
       osx_image: xcode10
       env:
-        - MATRIX_EVAL="brew update && brew install gcc@7 && CC=gcc-7 && CXX=g++-7 && CXX1X=g++-7 && CXX11=g++-7"
+        - MATRIX_EVAL="brew update && brew install gcc@7 && CC=gcc-7 && CXX=g++-7"
 
     - os: osx
       osx_image: xcode10
       env:
-        - MATRIX_EVAL="brew update && brew install gcc@8 && CC=gcc-8 && CXX=g++-8 && CXX1X=g++-8 && CXX11=g++-8"
+        - MATRIX_EVAL="brew update && brew install gcc@8 && CC=gcc-8 && CXX=g++-8"
 
 
 before_install:
@@ -318,6 +318,7 @@ before_install:
   - echo "CC=${CC} -std=gnu99" >> ~/.R/Makevars
   - echo "CXX=${CXX}" >> ~/.R/Makevars
   - echo "CXX1X=${CXX} -std=c++0x" >> ~/.R/Makevars
+  - echo "CXX11=${CXX} -std=c++0x" >> ~/.R/Makevars
 
 script:
   - git submodule update --recursive
