@@ -314,9 +314,12 @@ matrix:
 
 before_install:
   - eval "${MATRIX_EVAL}"
+  - mkdir -p ~/.R && rm -f ~/.R/Makevars
+  - echo "CC=${CC} -std=gnu99" >> ~/.R/Makevars
+  - echo "CXX=${CXX}" >> ~/.R/Makevars
+  - echo "CXX1X=${CXX} -std=c++0x" >> ~/.R/Makevars
 
 script:
   - git submodule update --recursive
-  - ${CXX} --version
-  - ${CC} --version
+  - cat ~/.R/Makevars
   - R CMD INSTALL .
