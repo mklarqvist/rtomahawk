@@ -32,11 +32,18 @@ CFLAGS        = -std=c99
 CFLAGS_VENDOR = -std=c99
 
 RCPP_CXXFLAGS := $(shell echo `$(R_HOME)/bin/Rscript -e "Rcpp:::CxxFlags()"`)
-RCPP_LDFLAGS := $(shell echo `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"`) -ltomahawk
+RCPP_LDFLAGS := $(shell echo `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"`)
 R_PATH := $(shell echo `$(R_HOME)/bin/Rscript -e "cat(R.home('include'))"`)
 
-PKG_CPPFLAGS := $(RCPP_CXXFLAGS) -I$(R_PATH) -I$(abspath ./tomahawk/include) -I$(abspath ./tomahawk/lib)
-PKG_LIBS     := $(RCPP_LDFLAGS) -L$(abspath ./tomahawk) -Wl,-rpath,${R_PACKAGE_DIR}/usrlib${R_ARCH}
+PKG_CPPFLAGS := $(RCPP_CXXFLAGS) -I$(R_PATH) -I$(abspath ./tomahawk/include)
+PKG_LIBS     := $(RCPP_LDFLAGS) -Wl,-rpath,${R_PACKAGE_DIR}/usrlib${R_ARCH} -L${R_PACKAGE_DIR}/usrlib${R_ARCH} -ltomahawk
+ifeq ($(shell uname), Darwin)
+# -dynamiclib is added by R
+PKG_LIBS +=  -install_name "@rpath/rtomahawk.so"
+endif
+
+$(info $$PKG_LIBS is [${PKG_LIBS}])
+$(info $$PATH is [${R_PACKAGE_DIR}/usrlib${R_ARCH}])
 
 OBJECTS  = $(CXX_SOURCE:.cpp=.o) $(C_SOURCE:.c=.o)
 CPP_DEPS = $(CXX_SOURCE:.cpp=.d) $(C_SOURCE:.c=.d)
@@ -63,31 +70,21 @@ TWK_LIBVER_MINOR := $(shell echo $(TWK_LIBVER_MINOR_SCRIPT))
 TWK_LIBVER_PATCH := $(shell echo $(TWK_LIBVER_PATCH_SCRIPT))
 TWK_LIBVER       := $(shell echo $(TWK_LIBVER_SCRIPT))
 
-.PHONY: all zstd htslib twk clean
+ifneq ($(shell uname), Darwin)
+SHARED_EXT = so
+else
+SHARED_EXT = dylib
+endif
 
-all: zstd htslib twk $(OBJECTS)
-	cp tomahawk/libtomahawk.so.$(TWK_LIBVER) .
-	cp -P tomahawk/libtomahawk.so .
-	cp htslib/libhts.so .
-	cp htslib/libhts.so.* .
-	cp -P htslib/libhts.so.* .
-	cp zstd/lib/libzstd.so.$(ZSTD_LIBVER) .
-	cp -P zstd/lib/libzstd.so .
-	ln -sf libzstd.so libzstd.so.1
-	mkdir -p "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
-	mkdir -p "${R_PACKAGE_DIR}/include/htslib"
-	mkdir -p "${R_PACKAGE_DIR}/include/zstd"
-	mkdir -p "${R_PACKAGE_DIR}/include/tomahawk"
-	cp -P {*.so,*.so.*} "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
-	cp htslib/htslib/*.h "${R_PACKAGE_DIR}/include/htslib"
-	cp zstd/lib/zstd.h "${R_PACKAGE_DIR}/include/zstd"
-	cp zstd/lib/dictBuilder/zdict.h "${R_PACKAGE_DIR}/include/zstd"
-	cp zstd/lib/deprecated/zbuff.h "${R_PACKAGE_DIR}/include/zstd"
-	cp zstd/lib/common/zstd_errors.h "${R_PACKAGE_DIR}/include/zstd"
-	cp tomahawk/include/*.h "${R_PACKAGE_DIR}/include/tomahawk"
+.PHONY: all zstd htslib twk clean paths
+
+all: zstd htslib twk paths $(OBJECTS)
+ifeq ($(shell uname),Darwin)
+	install_name_tool -change libtomahawk.$(SHARED_EXT) ${R_PACKAGE_DIR}/usrlib${R_ARCH}/libtomahawk.$(SHARED_EXT) rtomahawk.so	
+endif
 
 %.o: %.cpp
-	g++ -std=c++0x $(OPTFLAGS) $(PKG_CPPFLAGS) -fpic -c -o $@ $<
+	$(CXX) -std=c++0x $(OPTFLAGS) $(PKG_CPPFLAGS) -fpic -c -o $@ $<
 	
 zstd:
 	cd zstd && $(MAKE) default && cd ..
@@ -98,5 +95,39 @@ htslib:
 twk:
 	cd tomahawk && $(MAKE) library library=true origin=true && cd ..
 	
+paths:
+	mkdir -p "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
+	mkdir -p "${R_PACKAGE_DIR}/include/htslib"
+	mkdir -p "${R_PACKAGE_DIR}/include/zstd"
+	mkdir -p "${R_PACKAGE_DIR}/include/tomahawk"
+
+	cp tomahawk/libtomahawk.$(SHARED_EXT).$(TWK_LIBVER) .
+	cp -a tomahawk/libtomahawk.$(SHARED_EXT) .
+	
+ifneq ($(shell uname),Darwin)
+	cp -a htslib/libhts.$(SHARED_EXT) .
+	cp -a htslib/libhts.$(SHARED_EXT).* .
+	cp -a htslib/libhts.$(SHARED_EXT).* .
+	cp zstd/lib/libzstd.$(SHARED_EXT).$(ZSTD_LIBVER) .
+	cp -a zstd/lib/libzstd.$(SHARED_EXT) .
+	ln -sf libzstd.so libzstd.$(SHARED_EXT).1
+else
+	cp -a htslib/libhts.$(SHARED_EXT) .
+	cp -a htslib/libhts.*.$(SHARED_EXT) .
+	cp -a zstd/lib/libzstd.*.$(SHARED_EXT) .
+	ln -sf libzstd.1.$(SHARED_EXT) libzstd.$(SHARED_EXT)
+	ln -sf libtomahawk.$(SHARED_EXT) libtomahawk.1.$(SHARED_EXT)
+endif
+	cp -a {*.$(SHARED_EXT),*.$(SHARED_EXT).*} "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
+	cp htslib/htslib/*.h "${R_PACKAGE_DIR}/include/htslib"
+	cp zstd/lib/zstd.h "${R_PACKAGE_DIR}/include/zstd"
+	cp zstd/lib/dictBuilder/zdict.h "${R_PACKAGE_DIR}/include/zstd"
+	cp zstd/lib/deprecated/zbuff.h "${R_PACKAGE_DIR}/include/zstd"
+	cp zstd/lib/common/zstd_errors.h "${R_PACKAGE_DIR}/include/zstd"
+	cp tomahawk/include/*.h "${R_PACKAGE_DIR}/include/tomahawk"
+
 clean:
-	rm -f *.so *.so.* $(OBJECTS) $(CPP_DEPS) $(SHLIB)
+	rm -f *.$(SHARED_EXT) *.$(SHARED_EXT).* $(OBJECTS) $(CPP_DEPS) $(SHLIB) rtomahawk.so
+	cd zstd && make clean && cd ..
+	cd htslib && make clean && cd ..
+	cd tomahawk && make clean && cd ..
