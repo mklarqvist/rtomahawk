@@ -323,4 +323,4 @@ before_install:
 script:
   - git submodule update --recursive
   - cat ~/.R/Makevars
-  - R CMD INSTALL .
+  - R CMD INSTALL . --no-staged-install
