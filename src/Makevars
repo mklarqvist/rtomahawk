@@ -87,13 +87,13 @@ endif
 	$(CXX) -std=c++0x $(OPTFLAGS) $(PKG_CPPFLAGS) -fpic -c -o $@ $<
 	
 zstd:
-	cd zstd && $(MAKE) CC=${CC} CXX=${CXX} default && cd ..
+	cd zstd && $(MAKE) CC="${CC}" CXX="${CXX}" default && cd ..
 
 htslib:
-	cd htslib && $(MAKE) CC=${CC} CXX=${CXX} && cd ..
+	cd htslib && $(MAKE) CC="${CC}" CXX="${CXX}" && cd ..
 
 twk:
-	cd tomahawk && $(MAKE) CC=${CC} CXX=${CXX} library library=true origin=true && cd ..
+	cd tomahawk && $(MAKE) CC="${CC}" CXX="${CXX}" library library=true origin=true && cd ..
 	
 paths:
 	mkdir -p "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
