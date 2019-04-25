@@ -1,6 +1,6 @@
 # Control file for continuous integration testing at http://travis-ci.org/
 language: r
-r: bioc-devel
+r: release
 dist: trusty
 
 matrix:
@@ -34,6 +34,7 @@ before_install:
   - echo "CXX=${CXX}" >> ~/.R/Makevars
   - echo "CXX1X=${CXX} -std=c++0x" >> ~/.R/Makevars
   - echo "CXX11=${CXX} -std=c++0x" >> ~/.R/Makevars
+  - Rscript -e 'source("https://bioconductor.org/biocLite.R"); BiocInstaller::biocLite(c("GenomicFeatures"));'
 
 script:
   - git submodule update --recursive
