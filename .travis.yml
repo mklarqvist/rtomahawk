@@ -13,6 +13,16 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
       env:
          - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
       compiler: gcc
@@ -25,6 +35,15 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
       env:
          - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
       compiler: gcc
@@ -37,6 +56,15 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-6
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
       env:
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
       compiler: gcc
@@ -49,6 +77,16 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
       compiler: gcc
@@ -61,6 +99,16 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-8
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
       env:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
       compiler: gcc
@@ -74,6 +122,15 @@ matrix:
             - llvm-toolchain-precise-3.6
           packages:
             - clang-3.6
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
       env:
         - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
       compiler: clang
@@ -87,6 +144,15 @@ matrix:
             - llvm-toolchain-precise-3.7
           packages:
             - clang-3.7
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
       env:
         - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
       compiler: clang
@@ -100,6 +166,15 @@ matrix:
             - llvm-toolchain-precise-3.8
           packages:
             - clang-3.8
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
       env:
         - MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
       compiler: clang
@@ -112,6 +187,15 @@ matrix:
             - llvm-toolchain-trusty-3.9
           packages:
             - clang-3.9
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
       env:
         - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
       compiler: clang
@@ -124,6 +208,15 @@ matrix:
             - llvm-toolchain-trusty-4.0
           packages:
             - clang-4.0
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
       env:
         - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
       compiler: clang
@@ -136,6 +229,15 @@ matrix:
             - llvm-toolchain-trusty-5.0
           packages:
             - clang-5.0
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
       env:
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
       compiler: clang
@@ -150,6 +252,16 @@ matrix:
           packages:
             - clang-6.0
             - libstdc++-6-dev
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
       env:
         - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
       compiler: clang
@@ -164,6 +276,16 @@ matrix:
           packages:
             - clang-7
             - libstdc++-7-dev
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
       env:
         - MATRIX_EVAL="CC=clang-7 && CXX=clang++-7"
       compiler: clang
@@ -195,5 +317,6 @@ before_install:
 
 script:
   - git submodule update --recursive
-  - cd ..
-  - R CMD INSTALL rtomahawk/
+  - ${CXX} --version
+  - ${CC} --version
+  - R CMD INSTALL .
