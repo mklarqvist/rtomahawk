@@ -1,0 +1,175 @@
+# Control file for continuous integration testing at http://travis-ci.org/
+language: r
+r: release
+dist: trusty
+
+matrix:
+  include:
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
+      env:
+         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+      compiler: gcc
+
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+      env:
+         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+      compiler: gcc
+
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+      env:
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+      compiler: gcc
+
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+      compiler: gcc
+
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-8
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+      compiler: gcc
+
+    # works on Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-6.0
+          packages:
+            - clang-6.0
+            - libstdc++-6-dev
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
+      env:
+        - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
+      compiler: clang
+
+    # works on Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-7
+          packages:
+            - clang-7
+            - libstdc++-7-dev
+            - pkg-config
+            - libncurses5-dev
+            - libncursesw5-dev
+            - zlib1g-dev 
+            - libssl-dev
+            - liblz4-dev
+            - libcurl4-openssl-dev 
+            - liblz-dev
+            - libbz2-dev
+            - liblzma-dev
+      env:
+        - MATRIX_EVAL="CC=clang-7 && CXX=clang++-7"
+      compiler: clang
+
+before_install:
+  - eval "${MATRIX_EVAL}"
+  - mkdir -p ~/.R && rm -f ~/.R/Makevars
+  - echo "CC=${CC} -std=gnu99" >> ~/.R/Makevars
+  - echo "CXX=${CXX}" >> ~/.R/Makevars
+  - echo "CXX1X=${CXX} -std=c++0x" >> ~/.R/Makevars
+  - echo "CXX11=${CXX} -std=c++0x" >> ~/.R/Makevars
+
+script:
+  - git submodule update --recursive
+  - cat ~/.R/Makevars
+  - R CMD INSTALL . --no-staged-install
