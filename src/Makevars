@@ -36,14 +36,11 @@ RCPP_LDFLAGS := $(shell echo `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"`)
 R_PATH := $(shell echo `$(R_HOME)/bin/Rscript -e "cat(R.home('include'))"`)
 
 PKG_CPPFLAGS := $(RCPP_CXXFLAGS) -I$(R_PATH) -I$(abspath ./tomahawk/include)
-PKG_LIBS     := $(RCPP_LDFLAGS) '-Wl,-rpath,$$ORIGIN/,-rpath,$$ORIGIN/../usrlib,-rpath,$$ORIGIN/../libs' -ltomahawk
+PKG_LIBS     := $(RCPP_LDFLAGS) '-Wl,-rpath,$$ORIGIN/,-rpath,$$ORIGIN/../usrlib${R_ARCH},-rpath,$$ORIGIN/../libs' -ltomahawk
 ifeq ($(shell uname), Darwin)
 # -dynamiclib is added by R
 PKG_LIBS +=  -install_name "@rpath/rtomahawk.so"
 endif
-
-$(info $$PKG_LIBS is [${PKG_LIBS}])
-$(info $$PATH is [${R_PACKAGE_DIR}/usrlib${R_ARCH}])
 
 OBJECTS  = $(CXX_SOURCE:.cpp=.o) $(C_SOURCE:.c=.o)
 CPP_DEPS = $(CXX_SOURCE:.cpp=.d) $(C_SOURCE:.c=.d)
@@ -97,14 +94,15 @@ twk: zstd htslib
 	
 paths: twk
 	mkdir -p "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
+	mkdir -p "${R_PACKAGE_DIR}/libs${R_ARCH}"
 	mkdir -p "${R_PACKAGE_DIR}/include/htslib"
 	mkdir -p "${R_PACKAGE_DIR}/include/zstd"
 	mkdir -p "${R_PACKAGE_DIR}/include/tomahawk"
-	cp tomahawk/libtomahawk.$(SHARED_EXT).$(TWK_LIBVER) .
-	cp -a tomahawk/libtomahawk.$(SHARED_EXT) .
+	cp -d tomahawk/libtomahawk.* .
 	cp -a htslib/libhts.* .
 	cp -a zstd/lib/libzstd.* .
 	cp -a {*.$(SHARED_EXT),*.$(SHARED_EXT).*} "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
+	cp -a {*.$(SHARED_EXT),*.$(SHARED_EXT).*} "${R_PACKAGE_DIR}/libs${R_ARCH}"
 	cp htslib/htslib/*.h "${R_PACKAGE_DIR}/include/htslib"
 	cp zstd/lib/zstd.h "${R_PACKAGE_DIR}/include/zstd"
 	cp zstd/lib/dictBuilder/zdict.h "${R_PACKAGE_DIR}/include/zstd"
