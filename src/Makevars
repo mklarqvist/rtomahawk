@@ -36,7 +36,7 @@ RCPP_LDFLAGS := $(shell echo `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"`)
 R_PATH := $(shell echo `$(R_HOME)/bin/Rscript -e "cat(R.home('include'))"`)
 
 PKG_CPPFLAGS := $(RCPP_CXXFLAGS) -I$(R_PATH) -I$(abspath ./tomahawk/include)
-PKG_LIBS     := $(RCPP_LDFLAGS) -Wl,-rpath,${R_PACKAGE_DIR}/usrlib${R_ARCH} -L${R_PACKAGE_DIR}/usrlib${R_ARCH} -ltomahawk
+PKG_LIBS     := $(RCPP_LDFLAGS) '-Wl,-rpath,$$ORIGIN/,-rpath,$$ORIGIN/../usrlib,-rpath,$$ORIGIN/../libs' -ltomahawk
 ifeq ($(shell uname), Darwin)
 # -dynamiclib is added by R
 PKG_LIBS +=  -install_name "@rpath/rtomahawk.so"
@@ -78,7 +78,7 @@ endif
 
 .PHONY: all zstd htslib twk clean paths
 
-all: zstd htslib twk paths $(OBJECTS)
+all: paths $(OBJECTS)
 ifeq ($(shell uname),Darwin)
 	install_name_tool -change libtomahawk.$(SHARED_EXT) ${R_PACKAGE_DIR}/usrlib${R_ARCH}/libtomahawk.$(SHARED_EXT) rtomahawk.so	
 endif
@@ -92,32 +92,18 @@ zstd:
 htslib:
 	cd htslib && autoheader && autoconf && ./configure && $(MAKE) CC="${CC}" CXX="${CXX}" && cd ..
 
-twk:
+twk: zstd htslib
 	cd tomahawk && $(MAKE) CC="${CC}" CXX="${CXX}" library library=true origin=true && cd ..
 	
-paths:
+paths: twk
 	mkdir -p "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
 	mkdir -p "${R_PACKAGE_DIR}/include/htslib"
 	mkdir -p "${R_PACKAGE_DIR}/include/zstd"
 	mkdir -p "${R_PACKAGE_DIR}/include/tomahawk"
-
 	cp tomahawk/libtomahawk.$(SHARED_EXT).$(TWK_LIBVER) .
 	cp -a tomahawk/libtomahawk.$(SHARED_EXT) .
-	
-ifneq ($(shell uname),Darwin)
-	cp -a htslib/libhts.$(SHARED_EXT) .
-	cp -a htslib/libhts.$(SHARED_EXT).* .
-	cp -a htslib/libhts.$(SHARED_EXT).* .
-	cp zstd/lib/libzstd.$(SHARED_EXT).$(ZSTD_LIBVER) .
-	cp -a zstd/lib/libzstd.$(SHARED_EXT) .
-	ln -sf libzstd.so libzstd.$(SHARED_EXT).1
-else
-	cp -a htslib/libhts.$(SHARED_EXT) .
-	cp -a htslib/libhts.*.$(SHARED_EXT) .
-	cp -a zstd/lib/libzstd.*.$(SHARED_EXT) .
-	ln -sf libzstd.1.$(SHARED_EXT) libzstd.$(SHARED_EXT)
-	ln -sf libtomahawk.$(SHARED_EXT) libtomahawk.1.$(SHARED_EXT)
-endif
+	cp -a htslib/libhts.* .
+	cp -a zstd/lib/libzstd.* .
 	cp -a {*.$(SHARED_EXT),*.$(SHARED_EXT).*} "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
 	cp htslib/htslib/*.h "${R_PACKAGE_DIR}/include/htslib"
 	cp zstd/lib/zstd.h "${R_PACKAGE_DIR}/include/zstd"
